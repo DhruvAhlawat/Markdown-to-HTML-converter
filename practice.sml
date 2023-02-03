@@ -1,6 +1,6 @@
 include IMPERATIVE_IO
 
-exception BoldNotEnded;
+exception AsterixNotMatched;
 
 
 fun HeadString(cnt,0) = "<h"^(String.str(Char.chr(cnt + Char.ord(#"0")))^">")
@@ -17,54 +17,65 @@ fun mdt2html(infile) =
 
         (* fun bold(#"*" :: #"*" :: t) *)
 
-        fun Links(#"<"::s,toDisplay) = (TextIO.output(outs,"<a href=\""); Links(s,toDisplay))
+        fun Links(#"<"::s,toDisplay) = (TextIO.output(outs,"<a href=\""); Links(s,toDisplay)) (*required links to have http at the front*)
         |   Links(#">"::s,toDisplay) = (TextIO.output(outs, toDisplay^"\">"^toDisplay^"</a>"); s)
         |   Links(h::s,toDisplay) = Links(s,(toDisplay^String.str(h)));
 
-        fun Parse([],a,b,c) = (b,c) (*empty so we should just return if we are in a paragraph*)
-        |   Parse(#"<" :: #"h" :: #"t":: #"t" :: #"p":: t,a,b,c) = Parse(Links(#"<" :: #"h" :: #"t" :: #"t" :: #"p":: t,""),a,b,c)
-        |   Parse(#"*" :: #"*" :: t,a,b,0) = (TextIO.output(outs,"<strong>"); Parse(t,a,b,1))
-        |   Parse(#"*" :: #"*" :: t,a,b,1) = (TextIO.output(outs,"</strong>"); Parse(t,a,b,0))
-        |   Parse(h::t,0,0,c) = (TextIO.output(outs,"<p>\n"); Parse(h::t,0,1,c))
-        |   Parse(h::t,a,b,c) = (TextIO.output1(outs,h); Parse(t,a+1,1,c));
+        fun escape(#"." :: t ) = (TextIO.output1(outs,#"."); t) (*chr(92) is \ (backslash) and hence is used to escape characters*)
+        |   escape(#"\\" ::  t ) = (TextIO.output1(outs,#"\\"); t) (*if \ is followed by a non-escapable character then it is printed normally*)
+        |   escape(#"*" :: t ) = (TextIO.output1(outs,#"*"); t)
+        |   escape( #"_" :: t ) = (TextIO.output1(outs,#"_"); t)
+        |   escape( #"{" :: t ) = (TextIO.output1(outs,#"{"); t)
+        |   escape( #"}" :: t ) = (TextIO.output1(outs,#"}"); t)
+        |   escape( #"#" :: t ) = (TextIO.output1(outs,#"#"); t)
+        |   escape( #"[" :: t ) = (TextIO.output1(outs,#"["); t)
+        |   escape( #"(" :: t ) = (TextIO.output1(outs,#"("); t)
+        |   escape( #")" :: t ) = (TextIO.output1(outs,#")"); t)
+        |   escape( #"]" :: t ) = (TextIO.output1(outs,#"]"); t)
+        |   escape( #"-" :: t ) = (TextIO.output1(outs,#"-"); t)
+        |   escape( #"+" :: t ) = (TextIO.output1(outs,#"+"); t)
+        |   escape( #"!" :: t ) = (TextIO.output1(outs,#"!"); t)
+        |   escape( #"`" :: t ) = (TextIO.output1(outs,#"`"); t)
+        |   escape(t) = t; (*printed normally if inescapable character*)
 
-        fun header(#"#"::t,cnt,1,c) = (TextIO.output(outs,"</p>\n"); header(#"#"::t,cnt,0,c)) 
-        |   header(#"#"::t,cnt,0,c) = if (cnt < 5) then header(t,cnt+1,0,c)
-        else (TextIO.output(outs,HeadString(6,0)); Parse(t,6,0,c); TextIO.output(outs,HeadString(6,1)); (0,c))
-        |   header(s,0,a,c) = Parse(s,0,a,c)
-        |   header(s,cnt,a,c) = (TextIO.output(outs,HeadString(cnt,0)); Parse(s,cnt,0,c); TextIO.output(outs,HeadString(cnt,1)); (0,c))
+        fun Parse([],a,b,c,d) = (b,c,d) (*empty so we should just return if we are in a paragraph*)
+        |   Parse(h::t,0,0,c,d) = (TextIO.output(outs,"<p>\n"); Parse(h::t,0,1,c,d))
+        |   Parse(#"\\" :: t,a,b,c,d) = Parse(escape(t),a,b,c,d)
+        |   Parse(#"<" :: #"h" :: #"t":: #"t" :: #"p":: t,a,b,c,d) = Parse(Links(#"<" :: #"h" :: #"t" :: #"t" :: #"p":: t,""),a,b,c,d)
+        |   Parse(#"*" :: #"*" :: t,a,b,0,d) = (TextIO.output(outs,"<strong>"); Parse(t,a,b,1,d))
+        |   Parse(#"*" :: #"*" :: t,a,b,1,d) = (TextIO.output(outs,"</strong>"); Parse(t,a,b,0,d))
+        |   Parse(#"*" :: t,a,b,c,0) = (TextIO.output(outs,"<em>"); Parse(t,a,b,c,1))
+        |   Parse(#"*" :: t,a,b,c,1) = (TextIO.output(outs,"</em>"); Parse(t,a,b,c,0))
+        |   Parse(h::t,a,b,c,d) = (TextIO.output1(outs,h); Parse(t,a+1,1,c,d));
+
+        fun header(#"#"::t,cnt,1,c,d) = (TextIO.output(outs,"</p>\n"); header(#"#"::t,cnt,0,c,d)) 
+        |   header(#"#"::t,cnt,0,c,d) = if (cnt < 5) then header(t,cnt+1,0,c,d)
+        else (TextIO.output(outs,HeadString(6,0)); Parse(t,6,0,c,d); TextIO.output(outs,HeadString(6,1)); (0,c,d))
+        |   header(s,0,a,c,d) = Parse(s,0,a,c,d)
+        |   header(s,cnt,a,c,d) = (TextIO.output(outs,HeadString(cnt,0)); Parse(s,cnt,0,c,d); TextIO.output(outs,HeadString(cnt,1)); (0,c,d))
 
 
         (*fun LineToList(Line)*)
 
-        fun LineWork(NONE,0,0) = (TextIO.closeIn ins; TextIO.closeOut outs)
-        (*|   LineWork(NONE,0,c) = raise BoldNotEnded;*)
-        |   LineWork(NONE,b,c) = (TextIO.output(outs,"</p>\n"); TextIO.closeIn ins; TextIO.closeOut outs)
-        |   LineWork(SOME("\n"),1,c) = (TextIO.output(outs,"</p>\n"); LineWork(TextIO.inputLine ins, 0,c))
-        |   LineWork(SOME("---\n"),b,c) = (TextIO.output(outs,"<hr />\n"); LineWork(TextIO.inputLine ins, b,c))
-        |   LineWork(SOME(line),b,c) = 
+        fun LineWork(NONE,0,0,0) = (TextIO.closeIn ins; TextIO.closeOut outs)
+        |   LineWork(NONE,0,c,d) = (TextIO.output(outs, "Asterix wasnt matched"))(*raise AsterixNotMatched*)
+        |   LineWork(NONE,b,c,d) = (TextIO.output(outs,"</p>\n"); TextIO.closeIn ins; TextIO.closeOut outs)
+        |   LineWork(SOME("\n"),1,c,d) = (TextIO.output(outs,"</p>\n"); LineWork(TextIO.inputLine ins, 0,c,d))
+        |   LineWork(SOME("---\n"),b,c,d) = (TextIO.output(outs,"<hr />\n"); LineWork(TextIO.inputLine ins, b,c,d))
+        |   LineWork(SOME(line),b,c,d) = 
             let
-                val (isInPara, isBold) = header(explode line,0,b,c);
+                val (isInPara, isBold, isItalic) = header(explode line,0,b,c,d);
             in
-            LineWork(TextIO.inputLine ins, isInPara, isBold)
+            LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic)
             end; 
     in
-        LineWork(TextIO.inputLine ins, 0,0)
+        LineWork(TextIO.inputLine ins, 0,0,0)
     end;
 
-            
-fun tuplestuff(a) = (a,a)
 
-exception ff
 
-raise ff;
-fun powa(0) = raise ff
-|   powa(a) = 1;
 
-powa 0;
-fun rtr (a,b) = (b,a);
 
-val c,d = rtr(4,7);
 mdt2html "MarkdownTest.md";
 mdt2html "ExampleFile.md";
 
