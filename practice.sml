@@ -38,21 +38,37 @@ fun mdt2html(infile) =
         |   escape( #"`" :: t ) = (TextIO.output1(outs,#"`"); t)
         |   escape(t) = t; (*printed normally if inescapable character*)
 
-        fun Parse([],a,b,c,d) = (b,c,d) (*empty so we should just return if we are in a paragraph*)
-        |   Parse(h::t,0,0,c,d) = (TextIO.output(outs,"<p>\n"); Parse(h::t,0,1,c,d))
-        |   Parse(#"\\" :: t,a,b,c,d) = Parse(escape(t),a,b,c,d)
-        |   Parse(#"<" :: #"h" :: #"t":: #"t" :: #"p":: t,a,b,c,d) = Parse(Links(#"<" :: #"h" :: #"t" :: #"t" :: #"p":: t,""),a,b,c,d)
-        |   Parse(#"*" :: #"*" :: t,a,b,0,d) = (TextIO.output(outs,"<strong>"); Parse(t,a,b,1,d))
-        |   Parse(#"*" :: #"*" :: t,a,b,1,d) = (TextIO.output(outs,"</strong>"); Parse(t,a,b,0,d))
-        |   Parse(#"*" :: t,a,b,c,0) = (TextIO.output(outs,"<em>"); Parse(t,a,b,c,1))
-        |   Parse(#"*" :: t,a,b,c,1) = (TextIO.output(outs,"</em>"); Parse(t,a,b,c,0))
-        |   Parse(h::t,a,b,c,d) = (TextIO.output1(outs,h); Parse(t,a+1,1,c,d));
+        
 
-        fun header(#"#"::t,cnt,1,c,d) = (TextIO.output(outs,"</p>\n"); header(#"#"::t,cnt,0,c,d)) 
-        |   header(#"#"::t,cnt,0,c,d) = if (cnt < 5) then header(t,cnt+1,0,c,d)
-        else (TextIO.output(outs,HeadString(6,0)); Parse(t,6,0,c,d); TextIO.output(outs,HeadString(6,1)); (0,c,d))
-        |   header(s,0,a,c,d) = Parse(s,0,a,c,d)
-        |   header(s,cnt,a,c,d) = (TextIO.output(outs,HeadString(cnt,0)); Parse(s,cnt,0,c,d); TextIO.output(outs,HeadString(cnt,1)); (0,c,d))
+        fun codeBlock([]) = 1
+        |   codeBlock(#"<" :: t) = (TextIO.output(outs,"&lt"); codeBlock(t)) (*inside codeblocks, <,> and & are automatically converted *)
+        |   codeBlock(#">" :: t) = (TextIO.output(outs,"&gt"); codeBlock(t))
+        |   codeBlock(#"&" :: t) = (TextIO.output(outs,"&amp"); codeBlock(t))
+        |   codeBlock(s::t) = (TextIO.output1(outs,s); codeBlock(t));
+
+        fun Parse([],a,b,c,d,e) = (b,c,d,e) (*empty so we should just return if we are in a paragraph*)
+        |   Parse(#" " :: #" " :: #" " :: #" " :: t,0,0,c,d,e) = (TextIO.output(outs,"<pre><code>"); codeBlock(t); (2,c,d,e))
+        |   Parse(#" " :: #" " :: #" " :: #" " :: t,0,1,c,d,e) = (TextIO.output(outs,"</p>\n<pre><code>"); codeBlock(t); (2,c,d,e)) (*Transitions to state 2 which means we are in codeblocks*)
+        |   Parse(#" " :: #" " :: #" " :: #" " :: t,0,2,c,d,e) = (codeBlock(t); (2,c,d,e))
+        |   Parse(h::t,0,2,c,d,e) = (TextIO.output(outs,"</code></pre>\n"); Parse(h::t,0,0,c,d,e))
+        |   Parse(h::t,0,0,c,d,e) = (TextIO.output(outs,"<p>\n"); Parse(h::t,0,1,c,d,e))
+        |   Parse(#"\\" :: t,a,b,c,d,e) = Parse(escape(t),a,b,c,d,e)
+        |   Parse(#"<" :: #"h" :: #"t":: #"t" :: #"p":: t,a,b,c,d,e) = Parse(Links(#"<" :: #"h" :: #"t" :: #"t" :: #"p":: t,""),a,b,c,d,e)
+        |   Parse(#"*" :: #"*" :: t,a,b,0,d,e) = (TextIO.output(outs,"<strong>"); Parse(t,a,b,1,d,e))
+        |   Parse(#"*" :: #"*" :: t,a,b,1,d,e) = (TextIO.output(outs,"</strong>"); Parse(t,a,b,0,d,e))
+        |   Parse(#"*" :: t,a,b,c,0,e) = (TextIO.output(outs,"<em>"); Parse(t,a,b,c,1,e))
+        |   Parse(#"*" :: t,a,b,c,1,e) = (TextIO.output(outs,"</em>"); Parse(t,a,b,c,0,e))
+        |   Parse(#"_" :: t,a,b,c,d,0) = (TextIO.output(outs,"<u>"); Parse(t,a,b,c,d,1))
+        |   Parse(#" " :: t,a,b,c,d,1) = (TextIO.output(outs,"</u>"); Parse(t,a,b,c,d,0))
+        |   Parse(h::t,a,b,c,d,e) = (TextIO.output1(outs,h); Parse(t,a+1,1,c,d,e));
+        
+        fun header(#"#"::t,cnt,1,c,d,e) = (TextIO.output(outs,"</p>\n"); header(#"#"::t,cnt,0,c,d,e)) 
+        |   header(#"#"::t,cnt,2,c,d,e) = (TextIO.output(outs,"</code></pre>\n"); header(#"#"::t,cnt,0,c,d,e))
+        |   header(#"#"::t,cnt,0,c,d,e) = if (cnt < 5) then header(t,cnt+1,0,c,d,e)
+        else (TextIO.output(outs,HeadString(6,0)); Parse(t,6,0,c,d,e); TextIO.output(outs,HeadString(6,1)); (0,c,d,e))
+        |   header(s,0,a,c,d,e) = Parse(s,0,a,c,d,e)
+        (*|   header(s,0,)*)
+        |   header(s,cnt,a,c,d,e) = (TextIO.output(outs,HeadString(cnt,0)); Parse(s,cnt,0,c,d,e); TextIO.output(outs,HeadString(cnt,1)); (0,c,d,e))
 
 
         (*fun LineToList(Line)*)
