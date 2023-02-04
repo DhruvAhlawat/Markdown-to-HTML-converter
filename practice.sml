@@ -39,6 +39,8 @@ fun mdt2html(infile) =
         |   escape( #"`" :: t ) = (TextIO.output1(outs,#"`"); t)
         |   escape(t) = t; (*printed normally if inescapable character*)
 
+        
+
         fun codeBlock([]) = 1
         |   codeBlock(#"<" :: t) = (TextIO.output(outs,"&lt"); codeBlock(t)) (*inside codeblocks, <,> and & are automatically converted *)
         |   codeBlock(#">" :: t) = (TextIO.output(outs,"&gt"); codeBlock(t))
@@ -60,7 +62,7 @@ fun mdt2html(infile) =
         |   Parse(#"_" :: t,a,b,c,d,0) = (TextIO.output(outs,"<u>"); Parse(t,a,b,c,d,1))
         |   Parse(#" " :: t,a,b,c,d,1) = (TextIO.output(outs,"</u>"); Parse(t,a,b,c,d,0))
         |   Parse(h::t,a,b,c,d,e) = (TextIO.output1(outs,h); Parse(t,a+1,1,c,d,e));
-
+        
         fun header(#"#"::t,cnt,1,c,d,e) = (TextIO.output(outs,"</p>\n"); header(#"#"::t,cnt,0,c,d,e)) 
         |   header(#"#"::t,cnt,2,c,d,e) = (TextIO.output(outs,"</code></pre>\n"); header(#"#"::t,cnt,0,c,d,e))
         |   header(#"#"::t,cnt,0,c,d,e) = if (cnt < 5) then header(t,cnt+1,0,c,d,e)
