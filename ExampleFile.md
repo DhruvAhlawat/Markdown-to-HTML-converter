@@ -1,7 +1,6 @@
 
 <center>
-
-# Department of Computer Science and Engineering
+#Department of Computer Science and Engineering
 
 ## Programming Languages
 
@@ -10,7 +9,6 @@
 #### Instructor: [S. Arun-Kumar]
 
 ##### Assignment: MDT: A translator from Markdown--  to HTML text with tables
-
 </center>
 
 ###### Introduction
@@ -73,7 +71,7 @@ simplifications by stripping down and changing some functionalities.
    using the "\[text\]\(http://url/of/the/link\)" syntax. Also implement the
    automatic links feature e.g.
 
-   	     <http://www.cse.iitd.ac.in/~sak>
+           <http://www.cse.iitd.ac.in/~sak>
 
    renders as <http://www.cse.iitd.ac.in/~sak> which
    provides the URL and the link to the URL.
