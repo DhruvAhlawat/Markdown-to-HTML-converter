@@ -21,7 +21,7 @@ fun mdt2html(infile) =
         fun Links(#"<"::s,toDisplay) = (TextIO.output(outs,"<a href=\""); Links(s,toDisplay)) (*required links to have http at the front*)
         |   Links(#">"::s,toDisplay) = (TextIO.output(outs, toDisplay^"\">"^toDisplay^"</a>"); s)
         |   Links(h::s,toDisplay) = Links(s,(toDisplay^String.str(h)));
-
+        (*comments*)
         fun escape(#"." :: t ) = (TextIO.output1(outs,#"."); t) (*chr(92) is \ (backslash) and hence is used to escape characters*)
         |   escape(#"\\" ::  t ) = (TextIO.output1(outs,#"\\"); t) (*if \ is followed by a non-escapable character then it is printed normally*)
         |   escape(#"*" :: t ) = (TextIO.output1(outs,#"*"); t)
