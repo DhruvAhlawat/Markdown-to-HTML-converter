@@ -40,7 +40,7 @@ fun mdt2html(infile) =
         |   escape( #"`" :: t ) = (TextIO.output1(outs,#"`"); t)
         |   escape(t) = t; (*printed normally if inescapable character*)
 
-        
+       
 
         fun codeBlock([]) = 1
         |   codeBlock(#"<" :: t) = (TextIO.output(outs,"&lt"); codeBlock(t)) (*inside codeblocks, <,> and & are automatically converted *)
@@ -72,27 +72,55 @@ fun mdt2html(infile) =
         (*|   header(s,0,)*)
         |   header(s,cnt,a,c,d,e) = (TextIO.output(outs,HeadString(cnt,0)); Parse(s,cnt,0,c,d,e); TextIO.output(outs,HeadString(cnt,1)); (0,c,d,e))
 
+        fun leadingSpaces(#" " :: t, cnt) = leadingSpaces(t, cnt + 1)
+        |   leadingSpaces(h::t,cnt) = (cnt,t);
 
+        fun checkListItem(#"." :: #" " :: t, cnt) = (cnt, t)
+        |   checkListItem(h::t,cnt) = if (Char.ord(h) <= 57 andalso Char.ord(h) >= 48) then checkListItem(t,cnt+1)
+        else (0,t);
         
+        fun ListHandling(line,f) = (TextIO.output(outs, "<li>"); )
 
-        fun LineWork(NONE,0,0,0,0) = (TextIO.closeIn ins; TextIO.closeOut outs)
-        |   LineWork(NONE,1,0,0,0) = (TextIO.output(outs,"</p>\n"); LineWork(NONE,0,0,0,0)) (*closes the open paragraph*)
-        |   LineWork(NONE,2,0,0,0) = (TextIO.output(outs,"</code></pre>"); LineWork(NONE,0,0,0,0))
-        |   LineWork(NONE,b,c,d,0) = (TextIO.output(outs, "Asterix wasnt matched"); LineWork(NONE,0,0,0,0); raise AsterixNotMatched)(*raise AsterixNotMatched*)
-        |   LineWork(NONE,b,c,d,e) = (TextIO.output(outs,"</u>"); LineWork(NONE,b,c,d,0)) (*inserts an underline ending automatically*)
-        |   LineWork(SOME("\n"),1,c,d,e) = (TextIO.output(outs,"</p>\n"); LineWork(TextIO.inputLine ins,0,c,d,e))
-        |   LineWork(SOME("---\n"),1,c,d,e) = (TextIO.output(outs,"</p>\n<hr>\n"); LineWork(TextIO.inputLine ins, 0,c,d,e))
-        |   LineWork(SOME("---\n"),2,c,d,e)= (TextIO.output(outs,"/code></pre>\n<hr>\n"); LineWork(TextIO.inputLine ins,0,c,d,e))
-        |   LineWork(SOME("---\n"),b,c,d,e)= (TextIO.output(outs,"<hr>\n"); LineWork(TextIO.inputLine ins,b,c,d,e))
 
-        |   LineWork(SOME(line),b,c,d,e) = 
-            let
-                val (isInPara, isBold, isItalic, isUnderlined) = header(explode line,0,b,c,d,e);
+        fun closeOLists(0) = 0
+        |   closeOLists(k) = (TextIO.output(outs,"</ol>"); k-1);
+
+        fun LineWork(NONE,0,0,0,0,0) = (TextIO.closeIn ins; TextIO.closeOut outs)
+        |   LineWork(NONE,1,0,0,0,f) = (TextIO.output(outs,"</p>\n"); LineWork(NONE,0,0,0,0,f)) (*closes the open paragraph*)
+        |   LineWork(NONE,2,0,0,0,f) = (TextIO.output(outs,"</code></pre>"); LineWork(NONE,0,0,0,0,f))
+        |   LineWork(NONE,b,c,d,0,f) = (TextIO.output(outs, "Asterix wasnt matched"); LineWork(NONE,0,0,0,0,f); raise AsterixNotMatched)(*raise AsterixNotMatched*)
+        |   LineWork(NONE,b,c,d,e,f) = (TextIO.output(outs,"</u>"); LineWork(NONE,b,c,d,0,f)) (*inserts an underline ending automatically*)
+        |   LineWork(SOME("\n"),1,c,d,e,f) = (TextIO.output(outs,"</p>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f))
+        |   LineWork(SOME("---\n"),1,c,d,e,f) = (TextIO.output(outs,"</p>\n<hr>\n"); LineWork(TextIO.inputLine ins, 0,c,d,e,f))
+        |   LineWork(SOME("---\n"),2,c,d,e,f)= (TextIO.output(outs,"/code></pre>\n<hr>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f))
+        |   LineWork(SOME("---\n"),b,c,d,e,f)= (TextIO.output(outs,"<hr>\n"); LineWork(TextIO.inputLine ins,b,c,d,e,f))
+
+        |   LineWork(SOME(line),b,c,d,e,f) = (*this should be for f = 0 btw, if f is not 0 then we need additional checks for whether to go intos*)
+            let 
+                val lspaces = leadingSpaces(explode line,0);
+                val isListItem = checkListItem(#2 lspaces, 0);
             in
-            LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined)
-            end; 
+                if(#1 isListItem = 0) then (*this should be a normal paragraph now, hence we should first end all the lists previously opened*)
+                let
+                    val (isInPara, isBold, isItalic, isUnderlined) = header(explode line,0,b,c,d,e)
+                    closeOLists(f); 
+                in
+                    LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined, 0)
+                end
+                else (*else it is a list item so we gotta do what we gotta do*)
+                let
+                    val kk = if(#1 lspaces > f) then (TextIO.output(outs,"<ol><li>"); )
+                    else if(#1 lspaces = f) then (TextIO.output(outs,"<li>")
+                in
+                    (*then we gotta make another list as this is an indented list item*)
+
+                    else (*then we gotta make another list item instead*)
+                    LineWork(TextIO.inputLine ins, 0, 0, 0, 0, f)
+                end
+            end
+            
     in
-        LineWork(TextIO.inputLine ins, 0,0,0,0)
+        LineWork(TextIO.inputLine ins, 0,0,0,0,0)
     end;
 
 
