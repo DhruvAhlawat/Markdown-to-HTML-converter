@@ -12,8 +12,10 @@
 
 6. underlining is delimited by space. An underscore after the underlined text is not necessary and a simple space can signify the end of the underlining, but an underscore before the text is necessary. Hence  \_under\_line will also output as <u>under line</u> (a space is there as well, since thats how its given in the Assignment.). Its important to note that either newline can only delimit it iff theres an ending underscore as well, so ending with "\_\n" works fine but without the underscore it would instead go to the newline
 
-2. Nested lists are a little weird as done by John Gruber. Its unclear how many spaces are needed for each nest. In markdown one space would be enough to make a nested list (1st degree), but if you add 2 or 3 spaces before next element it wouldn't nest another list and make a 2nd degree list but instead be considered as part of the same 1st degree list. example is given as the next list, of which you can see the source of.
-3. hello
+2. Nested lists are a little weird as done by John Gruber. Its unclear how many spaces are needed for each nest. In markdown one space would be enough to make a nested list (1st degree), but if you add 2 or 3 spaces before next element it wouldn't nest another list and make a 2nd degree list but instead be considered as part of the same 1st degree list. It takes 5 spaces for a 2nd degree nested list to form in markdown. example is given as the next list, of which you can see the source of. But the way I have implemented is as follows
+ -
+
+3. example Markdown List to show the unclear number of leading spaces it takes for nesting multiple levels
  * 1space
   * 2space
    * 3space
