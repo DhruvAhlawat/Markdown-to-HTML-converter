@@ -1,8 +1,6 @@
 include IMPERATIVE_IO
 
-exception AsterixNotMatched;
-fun HeadString(cnt,0) = "<h"^(String.str(Char.chr(cnt + Char.ord(#"0")))^">")
-    |   HeadString(cnt,a) = "</h"^(String.str(Char.chr(cnt + Char.ord(#"0")))^">");
+
 
 HeadString(6,1)
 
@@ -17,7 +15,10 @@ fun mdt2html(infile) =
         val outs = TextIO.openOut "filename.html";
 
         (* fun bold(#"*" :: #"*" :: t) *)
-
+        exception AsterixNotMatched;
+        fun HeadString(cnt,0) = "<h"^(String.str(Char.chr(cnt + Char.ord(#"0")))^">")
+        |   HeadString(cnt,a) = "</h"^(String.str(Char.chr(cnt + Char.ord(#"0")))^">");
+    
         fun Links(#"<"::s,toDisplay) = (TextIO.output(outs,"<a href=\""); Links(s,toDisplay)) (*required links to have http at the front*)
         |   Links(#">"::s,toDisplay) = (TextIO.output(outs, toDisplay^"\">"^toDisplay^"</a>"); s)
         |   Links(h::s,toDisplay) = Links(s,(toDisplay^String.str(h)));
@@ -68,9 +69,6 @@ fun mdt2html(infile) =
         |   header(s,0,a,c,d,e) = Parse(s,0,a,c,d,e)
         (*|   header(s,0,)*)
         |   header(s,cnt,a,c,d,e) = (TextIO.output(outs,HeadString(cnt,0)); Parse(s,cnt,0,c,d,e); TextIO.output(outs,HeadString(cnt,1)); (0,c,d,e))
-
-
-        
 
         fun LineWork(NONE,0,0,0,0) = (TextIO.closeIn ins; TextIO.closeOut outs)
         |   LineWork(NONE,1,0,0,0) = (TextIO.output(outs,"</p>\n"); LineWork(NONE,0,0,0,0)) (*closes the open paragraph*)
