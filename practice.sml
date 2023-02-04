@@ -58,7 +58,7 @@ fun mdt2html(infile) =
         (*fun LineToList(Line)*)
 
         fun LineWork(NONE,0,0,0) = (TextIO.closeIn ins; TextIO.closeOut outs)
-        |   LineWork(NONE,0,c,d) = (TextIO.output(outs, "Asterix wasnt matched"))(*raise AsterixNotMatched*)
+        |   LineWork(NONE,0,c,d) = (TextIO.output(outs, "Asterix wasnt matched"); TextIO.closeIn ins; TextIO.closeOut outs; raise AsterixNotMatched)(*raise AsterixNotMatched*)
         |   LineWork(NONE,b,c,d) = (TextIO.output(outs,"</p>\n"); TextIO.closeIn ins; TextIO.closeOut outs)
         |   LineWork(SOME("\n"),1,c,d) = (TextIO.output(outs,"</p>\n"); LineWork(TextIO.inputLine ins, 0,c,d))
         |   LineWork(SOME("---\n"),b,c,d) = (TextIO.output(outs,"<hr />\n"); LineWork(TextIO.inputLine ins, b,c,d))

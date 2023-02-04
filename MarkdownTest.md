@@ -17,10 +17,11 @@ basiv stuff
 ---
 hwo to do line breaks and all
  ---
-this is another paragraph
+*this is another paragraph
 also if I only output the br thing then the issue would be that the html file would not be readable
-hence I will also put out the line breaks.
-5*5
+
+hence I will also put out the line breaks.*
+
 
 # but if I add something here what then?
 well lets see how 
