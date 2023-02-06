@@ -54,7 +54,7 @@ fun mdt2html(infile) =
         |   Parse(#"*" :: t,a,b,c,0,e) = (TextIO.output(outs,"<em>"); Parse(t,a,b,c,1,e))
         |   Parse(#"*" :: t,a,b,c,1,e) = (TextIO.output(outs,"</em>"); Parse(t,a,b,c,0,e))
         |   Parse(#"_" :: t,a,b,c,d,0) = (TextIO.output(outs,"<u>"); Parse(t,a,b,c,d,1))
-        |   Parse(#" " :: t,a,b,c,d,1) = (TextIO.output(outs,"</u>"); Parse(t,a,b,c,d,0))
+        |   Parse(#"_" :: (#" " | #"\n") :: t,a,b,c,d,1) = (TextIO.output(outs,"</u> "); Parse(t,a,b,c,d,0))
         |   Parse(h::t,a,b,c,d,e) = (TextIO.output1(outs,h); Parse(t,a+1,1,c,d,e));
 
 
@@ -98,7 +98,8 @@ fun mdt2html(infile) =
         |   ListHandler(0,s,b,c,d,e,f) = (TextIO.output(outs,"<li>"); Parse(s,0,b,c,d,e));
     
 
-        fun LineWork(NONE,0,0,0,0,0) = (TextIO.closeIn ins; TextIO.closeOut outs) (*passes the entire state*)
+        fun LineWork(NONE,0,0,0,0,f) = (TextIO.closeIn ins; TextIO.closeOut outs) (*passes the entire state*)
+        (* |   LineWork(NONE,0,0,0,0,f) =  *) (*gotta implement recursive closure of lists at the end*)
         |   LineWork(NONE,1,0,0,0,f) = (TextIO.output(outs,"</p>\n"); LineWork(NONE,0,0,0,0,f)) (*closes the open paragraph*)
         |   LineWork(NONE,2,0,0,0,f) = (TextIO.output(outs,"</code></pre>"); LineWork(NONE,0,0,0,0,f))
         |   LineWork(NONE,b,c,d,0,f) = (TextIO.output(outs, "Asterix wasnt matched"); LineWork(NONE,0,0,0,0,f); raise AsterixNotMatched)(*raise AsterixNotMatched*)
@@ -128,16 +129,27 @@ fun mdt2html(infile) =
                     in
                         LineWork(TextIO.inputLine ins,bl,cl,dl,el,1)
                     end
-            end
+            end 
         |   LineWork(SOME(line),b,c,d,e,f) = 
             let 
                 val lspaces = leadingSpaces(explode line,0)
                 val isListItem = checkListItem(#2 lspaces, 0)
             in
-                if (#1 isListItem = 0)  (*not a list, so we close the list*)
+                if(#2 lspaces = [#"\n"]) then (*then it is just a blank line, so we should not close the list *)
+                    (*we should just continue ahead in this case as its a blank line only, no need to end our list*)
+                    LineWork(TextIO.inputLine ins,b,c,d,e,f)
+                else if (#1 isListItem = 0 andalso #1 lspaces < f)  (*not a list, so we close the list. as the first item is to the left*)
                 then
-                    (TextIO.output(outs,"</li></ol>"); LineWork(SOME(line),b,c,d,e,f-1)) 
-                else (*is a list*)
+                    (TextIO.output(outs,"</li></ol>"); LineWork(SOME(line),b,c,d,e,f-1))
+                else if(#1 isListItem = 0 andalso #1 lspaces >= f) then
+                    (*then we should parse this normally without applying the tags*)
+                    let  
+                        val (isInPara, isBold, isItalic, isUnderlined) = header(explode line,0,b,c,d,e);
+                    in
+                    LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,f)
+                    end (*normal parsing*)
+                else
+                (*is a list*)
                     if(#1 lspaces >= f) 
                     then let
                         val (bl,cl,dl,el) = ListHandler(1,#2 isListItem,b,c,d,e,f+1);
@@ -161,8 +173,6 @@ fun mdt2html(infile) =
                     end
             end
                 
-
-
     in
         LineWork(TextIO.inputLine ins, 0,0,0,0,0)
     end;
@@ -174,5 +184,6 @@ val outs = TextIO.openOut "filename.html";
 *)
 
 
-mdt2html "ExampleFile.md";
+mdt2html "ExampleFile.md"; 
 mdt2html "MarkdownTest.md";
+

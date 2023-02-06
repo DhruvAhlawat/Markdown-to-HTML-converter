@@ -155,16 +155,16 @@ SML -- such as loops and assignment -- unless absolutely essential.
     taken in order to solve the problem. Whether your decision is
     ``reasonable'' will be evaluated by the evaluator of the
     assignment.
-	
+
   - a description of  which code you have
     ``borrowed'' from various sources, along with the identity of the
     source.
-	
+
   - all sources that you have consulted in solving the assignment.
 
   - name changes or signature changes if any, along with a full
     justification of why that was necessary.
-  
+
 8. The evaluator may look at your source code before evaluating it,
    you must explain your algorithms in the form of comments, so that
    the evaluator can understand what you have implemented.
@@ -174,15 +174,15 @@ SML -- such as loops and assignment -- unless absolutely essential.
    Nobody is going to be impressed by it.
 
 10. There is a serious penalty for code similarity (similarity goes
-	much deeper than variable names, indentation and line numbering). If
-	it is felt that there is too much similarity in the code between any
-	two persons, then both are going to be penalized equally. So please
-	set permissions on your directories, so that others have no access
-	to your programs.
+   much deeper than variable names, indentation and line numbering). If
+   it is felt that there is too much similarity in the code between any
+   two persons, then both are going to be penalized equally. So please
+   set permissions on your directories, so that others have no access
+   to your programs.
 
 11. To reduce penalties, a clear section called 
-	**Acknowledgements** giving a detailed list of what you copied from
-	where or whom may be included in the <tt>README.mdt</tt> file.
+   **Acknowledgements** giving a detailed list of what you copied from
+   where or whom may be included in the <tt>README.mdt</tt> file.
 
 
 
