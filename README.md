@@ -1,5 +1,5 @@
 ## Some design decisions I took
-
+(Note that there are some whitespace characters that are not space or tabspace in the mdtab-2023.mdt file, so please backspace and put the spaces again, or shift+Tab the whole and then tab again )
 1. (---) is implemented as a dashed line ONLY when these are the only 3 characters on any line. This was done for more readability and so any random --- does not expand to a horizontal rule. also, no whitespace characters should be present before or after. (after this only the "\n" character must be there)
 
 4. Codeblocks are implemented as according to markdown, so if an indented block follows a paragraph without a blank line in between, it will be considered to be a part of the paragraph instead of a codeblock. Hence a blankline separating codeblock from paragraphs are necessary

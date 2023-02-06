@@ -76,6 +76,9 @@ fun mdt2html(infile) =
         fun leadingSpaces(#" " :: t, cnt) = leadingSpaces(t, cnt + 1)
         |   leadingSpaces(h::t,cnt) = (cnt,h::t);
 
+        fun removeFirstK(h,0) = h
+        |   removeFirstK(h::t,a) = removeFirstK(t,a-1);
+
         fun checkOLItem(#"." :: #" " :: t, cnt) = (cnt, t)
         |   checkOLItem(h::t,cnt) = if (Char.ord(h) <= 57 andalso Char.ord(h) >= 48) then checkOLItem(t,cnt+1)
             else (0,t);
@@ -127,6 +130,7 @@ fun mdt2html(infile) =
         |   ListHandler(0,s,b,c,d,e) = (TextIO.output(outs,"<li>"); Parse(s,0,b,c,d,e))
         |   ListHandler(2,s,b,c,d,e) = (TextIO.output(outs,"<ul><li>"); Parse(s,0,b,c,d,e)) (*starts an unordered list*)
     
+
        
         (*the last parameter of LineWork is a list whose head stores whether we are in ordered list or unordered list*)
 
@@ -165,7 +169,8 @@ fun mdt2html(infile) =
             end 
         |   LineWork(SOME(line),b,c,d,e,f,g) = 
             let 
-                val lspaces = leadingSpaces(explode line,0)
+                val explodedLine = explode line;
+                val lspaces = leadingSpaces(explodedLine,0)
                 val isListItem = checkListItem(#2 lspaces)
             in
                 if(#2 lspaces = [#"\n"]) then (*then it is just a blank line, so we should not close the list *)
@@ -184,9 +189,9 @@ fun mdt2html(infile) =
                 else if(#1 isListItem = 0 andalso #1 lspaces >= f) then
                     (*then we should parse this normally without applying the tags*)
                     let  
-                        val (isInPara, isBold, isItalic, isUnderlined) = header(#2 lspaces,0,b,c,d,e);
+                        val (isInPara, isBold, isItalic, isUnderlined) = header(removeFirstK(explodedLine,f),0,b,c,d,e);
                     in
-                    LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,f,g)
+                        LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,f,g)
                     end (*normal parsing*)
                 else
                 (*is a list*)
@@ -215,7 +220,7 @@ fun mdt2html(infile) =
                         val tempor = if (b = 1) then TextIO.output(outs,"</p>\n") else 
                         if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
                         else ();
-                        val ok = if(hd(g) = 1) then TextIO.output(outs,"</li></ol></li>") else TextIO.output(outs,"</li></ul></li>");
+                        val ok = if(hd(g) = 1) then TextIO.output(outs,"</li></ol>") else TextIO.output(outs,"</li></ul>");
                         (* val (bl,cl,dl,el) = ListHandler(0,#2 isListItem,b,c,d,e); *)
                     in
                         LineWork(SOME(line),b,c,d,e,f-1,tl(g))

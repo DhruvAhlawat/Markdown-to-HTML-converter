@@ -1,5 +1,9 @@
 1. hello world
-2. does this add p tags
+ - does this add p tags
+ - idk man this sucks
+ - yoyo
+  - lets do somethign more fun
+ - I totally agree
 3. we shall see in a moment
 4. this actually has multiple paragraphs
 
