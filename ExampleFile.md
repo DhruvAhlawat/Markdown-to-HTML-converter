@@ -33,10 +33,10 @@ simplifications by stripping down and changing some functionalities.
 ##### Markdown--: Essentials
 
 10. This HTML file <tt>mdtab-2023.md.html</tt> was produced by running
-    [markdown] [jg] on the text file <tt>mdtab-2023.md</tt>.
-    Use the [text][md] file to test your own program.
+    [markdown](jg) on the text file <tt>mdtab-2023.md</tt>.
+    Use the [text](md) file to test your own program.
 
-8. To know about markdown go to the [markdown syntax][jg]
+8. To know about markdown go to the [markdown syntax](jg)
    page maintained by John Gruber. Many of the simplifications listed
    below also refer to Gruber's document. 
 
@@ -78,7 +78,7 @@ simplifications by stripping down and changing some functionalities.
  
 7. **Lists.** Implement 
 
-   - *ordered lists* -- as given by [John Gruber] [jg]. Pay particular 
+   - *ordered lists* -- as given by [John Gruber](jg). Pay particular 
      attention to his 1986 example relating to escape sequencing the
      "." in case 1986 comes at the beginning of a line.
    - *unordered lists* -- implement only the hyphen (as done here).
@@ -121,7 +121,7 @@ SML -- such as loops and assignment -- unless absolutely essential.
    still have some doubts, <font color=red>make reasonable design
    decisions</font> and explicitly state them in a <tt>README.mdt</tt>
    to be submitted along with your code.
-	
+
 1. Upload and submit a single zip file called *entryno*<tt>.zip</tt>
    where *entryno* is your entry number. This file should contain the
    two files <tt>mdt2html.sml</tt> and <tt>README.mdt</tt>.
@@ -155,16 +155,16 @@ SML -- such as loops and assignment -- unless absolutely essential.
     taken in order to solve the problem. Whether your decision is
     ``reasonable'' will be evaluated by the evaluator of the
     assignment.
-	
+
   - a description of  which code you have
     ``borrowed'' from various sources, along with the identity of the
     source.
-	
+
   - all sources that you have consulted in solving the assignment.
 
   - name changes or signature changes if any, along with a full
     justification of why that was necessary.
-  
+
 8. The evaluator may look at your source code before evaluating it,
    you must explain your algorithms in the form of comments, so that
    the evaluator can understand what you have implemented.
@@ -174,18 +174,14 @@ SML -- such as loops and assignment -- unless absolutely essential.
    Nobody is going to be impressed by it.
 
 10. There is a serious penalty for code similarity (similarity goes
-	much deeper than variable names, indentation and line numbering). If
-	it is felt that there is too much similarity in the code between any
-	two persons, then both are going to be penalized equally. So please
-	set permissions on your directories, so that others have no access
-	to your programs.
+   much deeper than variable names, indentation and line numbering). If
+   it is felt that there is too much similarity in the code between any
+   two persons, then both are going to be penalized equally. So please
+   set permissions on your directories, so that others have no access
+   to your programs.
 
 11. To reduce penalties, a clear section called 
-	**Acknowledgements** giving a detailed list of what you copied from
-	where or whom may be included in the <tt>README.mdt</tt> file.
+   **Acknowledgements** giving a detailed list of what you copied from
+   where or whom may be included in the <tt>README.mdt</tt> file.
 
 
-
-[jg]: https://daringfireball.net/projects/markdown/syntax
-
-[md]: https://www.cse.iitd.ac.in/~sak/courses/pl/2022-23/ass/mdtab-2023.md
