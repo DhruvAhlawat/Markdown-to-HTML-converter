@@ -154,11 +154,12 @@ fun mdt2html(infile) =
                     let  
                         val (isInPara, isBold, isItalic, isUnderlined) = header(explode line,0,b,c,d,e);
                     in
-                    LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,0,g)
+                    (if(b = 1 andalso #2 lspaces = [#"\n"]) then TextIO.output(outs,"</p>") else ();
+                    LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,0,g))
                     end
                 else
                     let 
-                        val tempor = if (b = 1) then TextIO.output(outs,"</p>\n") else 
+                        val tempor = if (b = 1 andalso #2 lspaces = [#"\n"]) then TextIO.output(outs,"</p>\n") else 
                         if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
                         else ();
                         val (bl,cl,dl,el) = ListHandler(#3 isListItem,#2 isListItem,0,c,d,e); (*#3 isListItem denotes the type of list,ol or ul*)
@@ -175,7 +176,10 @@ fun mdt2html(infile) =
             in
                 if(#2 lspaces = [#"\n"]) then (*then it is just a blank line, so we should not close the list *)
                     (*we should just continue ahead in this case as its a blank line only, no need to end our list*)
-                    LineWork(TextIO.inputLine ins,b,c,d,e,f,g)
+                    (if (b = 1 andalso #2 lspaces = [#"\n"]) then TextIO.output(outs,"</p>\n") else 
+                        if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
+                        else ();
+                    LineWork(TextIO.inputLine ins,b,c,d,e,f,g))
                 else if (#1 isListItem = 0 andalso #1 lspaces  < f)  (*not a current degree(f) list, so we close the list*)
                 then
                     let 
@@ -238,6 +242,6 @@ val outs = TextIO.openOut "filename.html";
 *)
 
 
-mdt2html "ExampleFile.md"; 
 mdt2html "MarkdownTest.md";
+mdt2html "ExampleFile.md"; 
 
