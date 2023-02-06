@@ -33,10 +33,10 @@ simplifications by stripping down and changing some functionalities.
 ##### Markdown--: Essentials
 
 10. This HTML file <tt>mdtab-2023.md.html</tt> was produced by running
-    [markdown] [jg] on the text file <tt>mdtab-2023.md</tt>.
-    Use the [text][md] file to test your own program.
+    [markdown](jg) on the text file <tt>mdtab-2023.md</tt>.
+    Use the [text](md) file to test your own program.
 
-8. To know about markdown go to the [markdown syntax][jg]
+8. To know about markdown go to the [markdown syntax](jg)
    page maintained by John Gruber. Many of the simplifications listed
    below also refer to Gruber's document. 
 
@@ -78,7 +78,7 @@ simplifications by stripping down and changing some functionalities.
  
 7. **Lists.** Implement 
 
-   - *ordered lists* -- as given by [John Gruber] [jg]. Pay particular 
+   - *ordered lists* -- as given by [John Gruber](jg). Pay particular 
      attention to his 1986 example relating to escape sequencing the
      "." in case 1986 comes at the beginning of a line.
    - *unordered lists* -- implement only the hyphen (as done here).
@@ -86,11 +86,11 @@ simplifications by stripping down and changing some functionalities.
 1. Implement tables from csv format. Make the simplifying assumption that a HTML table is always
    centered. For example the following is
 
-   	     <<
-   	     1|2|3|4|9
-   	     5|6|7|8|10
-   	     11|12|13|14|15
-   	     >>
+            <<
+            1|2|3|4|9
+            5|6|7|8|10
+            11|12|13|14|15
+            >>
 
    a possible syntax for an HTML table that looks like
 
@@ -121,7 +121,7 @@ SML -- such as loops and assignment -- unless absolutely essential.
    still have some doubts, <font color=red>make reasonable design
    decisions</font> and explicitly state them in a <tt>README.mdt</tt>
    to be submitted along with your code.
-	
+
 1. Upload and submit a single zip file called *entryno*<tt>.zip</tt>
    where *entryno* is your entry number. This file should contain the
    two files <tt>mdt2html.sml</tt> and <tt>README.mdt</tt>.
@@ -185,7 +185,3 @@ SML -- such as loops and assignment -- unless absolutely essential.
    where or whom may be included in the <tt>README.mdt</tt> file.
 
 
-
-[jg]: https://daringfireball.net/projects/markdown/syntax
-
-[md]: https://www.cse.iitd.ac.in/~sak/courses/pl/2022-23/ass/mdtab-2023.md

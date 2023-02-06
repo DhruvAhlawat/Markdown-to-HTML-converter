@@ -11,6 +11,8 @@ fun mdt2html(infile) =
 
         (* fun bold(#"*" :: #"*" :: t) *)
         exception AsterixNotMatched;
+        exception BracketErrorInLinkPlacement;
+
         fun HeadString(cnt,0) = "<h"^(String.str(Char.chr(cnt + Char.ord(#"0")))^">")
         |   HeadString(cnt,a) = "</h"^(String.str(Char.chr(cnt + Char.ord(#"0")))^">");
     
@@ -18,6 +20,16 @@ fun mdt2html(infile) =
         |   Links(#">"::s,toDisplay) = (TextIO.output(outs, toDisplay^"\">"^toDisplay^"</a>"); s)
         |   Links(h::s,toDisplay) = Links(s,(toDisplay^String.str(h)));
         (*comments*)
+
+        fun LinkBrackets([],tD,link,a) = raise BracketErrorInLinkPlacement (*error if brackets dont match*)
+        (* |   LinkBrackets(#"(" :: s, tD, link, 0) = raise BracketErrorInLinkPlacement if ( or ) comes before [] closes *)
+        |   LinkBrackets(#"["::s,toDisplay,link,a) = LinkBrackets(s,"","",0)
+        |   LinkBrackets(#"]":: #"(" :: s,toDisplay,link,a) = LinkBrackets(s,toDisplay,link,1)
+        |   LinkBrackets(#"]"::s,toDisplay,link,a) = (TextIO.output(outs,"["^toDisplay^"]"); s) (*incase ( doesnt come directly after ], then its assumed to not be a link, and the original text is pasted *)
+        |   LinkBrackets(#")"::s,toDisplay,link,1) = (TextIO.output(outs,"<a href=\""^link^"\">"^toDisplay^"</a>"); s)
+        |   LinkBrackets(h::t,toDisplay,link,0) = LinkBrackets(t,toDisplay^str(h),link,0)
+        |   LinkBrackets(h::t,tD,link,a) = LinkBrackets(t,tD,link^String.str(h),1)
+
         fun escape(#"." :: t ) = (TextIO.output1(outs,#"."); t) (*chr(92) is \ (backslash) and hence is used to escape characters*)
         |   escape(#"\\" ::  t ) = (TextIO.output1(outs,#"\\"); t) (*if \ is followed by a non-escapable character then it is printed normally*)
         |   escape(#"*" :: t ) = (TextIO.output1(outs,#"*"); t)
@@ -47,7 +59,8 @@ fun mdt2html(infile) =
         |   Parse(#" " :: #" " :: #" " :: #" " :: t,0,2,c,d,e) = (codeBlock(t); (2,c,d,e))
         |   Parse(h::t,0,2,c,d,e) = (TextIO.output(outs,"</code></pre>\n"); Parse(h::t,0,0,c,d,e))
         |   Parse(h::t,0,0,c,d,e) = (TextIO.output(outs,"<p>\n"); Parse(h::t,0,1,c,d,e))
-        |   Parse(#"\\" :: t,a,b,c,d,e) = Parse(escape(t),a,b,c,d,e)
+        |   Parse(#"\\" :: t,a,b,c,d,e) = Parse(escape(t),a,b,c,d,e) (*escape characters*)
+        |   Parse(#"[" :: t,a,b,c,d,e) = Parse(LinkBrackets(#"["::t,"","",0), a,b,c,d,e)
         |   Parse(#"<" :: #"h" :: #"t":: #"t" :: #"p":: t,a,b,c,d,e) = Parse(Links(#"<" :: #"h" :: #"t" :: #"t" :: #"p":: t,""),a,b,c,d,e)
         |   Parse(#"*" :: #"*" :: t,a,b,0,d,e) = (TextIO.output(outs,"<strong>"); Parse(t,a,b,1,d,e))
         |   Parse(#"*" :: #"*" :: t,a,b,1,d,e) = (TextIO.output(outs,"</strong>"); Parse(t,a,b,0,d,e))
@@ -140,7 +153,8 @@ fun mdt2html(infile) =
                     LineWork(TextIO.inputLine ins,b,c,d,e,f)
                 else if (#1 isListItem = 0 andalso #1 lspaces < f)  (*not a list, so we close the list. as the first item is to the left*)
                 then
-                    (TextIO.output(outs,"</li></ol>"); LineWork(SOME(line),b,c,d,e,f-1))
+                    if (b = 1) then  (TextIO.output(outs,"</p></li></ol>"); LineWork(SOME(line),0,c,d,e,f-1))
+                    else (TextIO.output(outs,"</li></ol>"); LineWork(SOME(line),b,c,d,e,f-1))
                 else if(#1 isListItem = 0 andalso #1 lspaces >= f) then
                     (*then we should parse this normally without applying the tags*)
                     let  

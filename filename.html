@@ -51,11 +51,11 @@ simplifications by stripping down and changing some functionalities.
 <ol><li><p>
 This HTML file <tt>mdtab-2023.md.html</tt> was produced by running
 </p>
-<pre><code>[markdown] [jg] on the text file &lttt&gtmdtab-2023.md&lt/tt&gt.
-Use the [text][md] file to test your own program.
+<pre><code>[markdown](jg) on the text file &lttt&gtmdtab-2023.md&lt/tt&gt.
+Use the [text](md) file to test your own program.
 </li><li></code></pre>
 <p>
-To know about markdown go to the [markdown syntax][jg]
+To know about markdown go to the <a href="jg">markdown syntax</a>
    page maintained by John Gruber. Many of the simplifications listed
    below also refer to Gruber's document. 
 </p>
@@ -104,7 +104,7 @@ Implement the following for pure text elements --
 </li><li><strong>Lists.</strong> Implement 
 </p>
 <p>
-   - <em>ordered lists</em> -- as given by [John Gruber] [jg]. Pay particular 
+   - <em>ordered lists</em> -- as given by <a href="jg">John Gruber</a>. Pay particular 
 </p>
 <pre><code> attention to his 1986 example relating to escape sequencing the
  "." in case 1986 comes at the beginning of a line.
@@ -116,13 +116,12 @@ Implement the following for pure text elements --
 Implement tables from csv format. Make the simplifying assumption that a HTML table is always
    centered. For example the following is
 </p>
-<p>
-   	     <<
-   	     1|2|3|4|9
-   	     5|6|7|8|10
-   	     11|12|13|14|15
-   	     >>
-</p>
+<pre><code>        &lt&lt
+        1|2|3|4|9
+        5|6|7|8|10
+        11|12|13|14|15
+        &gt&gt
+</code></pre>
 <p>
    a possible syntax for an HTML table that looks like
 </p>
@@ -160,13 +159,12 @@ Since the above description is as clear as I can possibly make it, If you
    still have some doubts, <font color=red>make reasonable design
    decisions</font> and explicitly state them in a <tt>README.mdt</tt>
    to be submitted along with your code.
-</li></ol>	
 </p>
-<ol><li><p>
+</li><li><p>
 Upload and submit a single zip file called <em>entryno</em><tt>.zip</tt>
    where <em>entryno</em> is your entry number. This file should contain the
    two files <tt>mdt2html.sml</tt> and <tt>README.mdt</tt>.
-</li><li>You are <u>not </u> allowed to change any of the names
+</li><li>You are <u>not</u>  allowed to change any of the names
    or types given in the specification/signature. You are not even
    allowed to change upper-case letters to lower-case letters or
    vice-versa.
@@ -222,7 +220,7 @@ The evaluator may look at your source code before evaluating it,
    the evaluator can understand what you have implemented.
 </p>
 </li><li><p>
-Do <u>not </u>add any more decorations or functions or
+Do <u>not</u> add any more decorations or functions or
    user-interfaces in order to impress the evaluator of the program.
    Nobody is going to be impressed by it.
 </p>
@@ -236,15 +234,6 @@ There is a serious penalty for code similarity (similarity goes
 </p>
 </li><li><p>
 To reduce penalties, a clear section called 
-</li></ol>	<strong>Acknowledgements</strong> giving a detailed list of what you copied from
-	where or whom may be included in the <tt>README.mdt</tt> file.
-</p>
-<p>
-
-</p>
-<p>
-[jg]: https://daringfireball.net/projects/markdown/syntax
-</p>
-<p>
-[md]: https://www.cse.iitd.ac.in/~sak/courses/pl/2022-23/ass/mdtab-2023.md
+   <strong>Acknowledgements</strong> giving a detailed list of what you copied from
+   where or whom may be included in the <tt>README.mdt</tt> file.
 </p>
