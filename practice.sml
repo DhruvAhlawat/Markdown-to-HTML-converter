@@ -76,12 +76,26 @@ fun mdt2html(infile) =
         fun leadingSpaces(#" " :: t, cnt) = leadingSpaces(t, cnt + 1)
         |   leadingSpaces(h::t,cnt) = (cnt,h::t);
 
-        fun checkListItem(#"." :: #" " :: t, cnt) = (cnt, t)
-        |   checkListItem(h::t,cnt) = if (Char.ord(h) <= 57 andalso Char.ord(h) >= 48) then checkListItem(t,cnt+1)
+        fun checkOLItem(#"." :: #" " :: t, cnt) = (cnt, t)
+        |   checkOLItem(h::t,cnt) = if (Char.ord(h) <= 57 andalso Char.ord(h) >= 48) then checkOLItem(t,cnt+1)
             else (0,t);
-        
-        
 
+        fun checkULItem(#"-" :: #" " :: t) = (1, t)
+        |   checkULItem(s) = (0,s);
+        
+        fun checkListItem(s) = 
+        let 
+            val UL = checkULItem(s);
+        in
+            if(#1 UL = 0) then 
+                let 
+                    val OL = checkOLItem(s,0);
+                in
+                    if(#1 OL = 0) then (0,#2 OL,1) else (*last parameter 1 means ordered list and 2 means unordered list*)
+                    (1,#2 OL,1)
+                end
+            else (1,#2 UL,2)
+        end;
 
 
         fun header(#"#"::t,cnt,1,c,d,e) = (TextIO.output(outs,"</p>\n"); header(#"#"::t,cnt,0,c,d,e)) 
@@ -109,88 +123,107 @@ fun mdt2html(infile) =
             ListHandler(toParseNext)
         end; *)
 
-        fun ListHandler(1,s,b,c,d,e,f) = (TextIO.output(outs,"<ol><li>"); Parse(s,0,b,c,d,e)) 
-        |   ListHandler(0,s,b,c,d,e,f) = (TextIO.output(outs,"<li>"); Parse(s,0,b,c,d,e));
+        fun ListHandler(1,s,b,c,d,e) = (TextIO.output(outs,"<ol><li>"); Parse(s,0,b,c,d,e)) 
+        |   ListHandler(0,s,b,c,d,e) = (TextIO.output(outs,"<li>"); Parse(s,0,b,c,d,e))
+        |   ListHandler(2,s,b,c,d,e) = (TextIO.output(outs,"<ul><li>"); Parse(s,0,b,c,d,e)) (*starts an unordered list*)
     
+       
+        (*the last parameter of LineWork is a list whose head stores whether we are in ordered list or unordered list*)
 
-        fun LineWork(NONE,0,0,0,0,f) = (TextIO.closeIn ins; TextIO.closeOut outs) (*passes the entire state*)
+        fun LineWork(NONE,0,0,0,0,f,g) = (TextIO.closeIn ins; TextIO.closeOut outs) (*passes the entire state*)
         (* |   LineWork(NONE,0,0,0,0,f) =  *) (*gotta implement recursive closure of lists at the end*)
-        |   LineWork(NONE,1,0,0,0,f) = (TextIO.output(outs,"</p>\n"); LineWork(NONE,0,0,0,0,f)) (*closes the open paragraph*)
-        |   LineWork(NONE,2,0,0,0,f) = (TextIO.output(outs,"</code></pre>"); LineWork(NONE,0,0,0,0,f))
-        |   LineWork(NONE,b,c,d,0,f) = (TextIO.output(outs, "Asterix wasnt matched"); LineWork(NONE,0,0,0,0,f); raise AsterixNotMatched)(*raise AsterixNotMatched*)
-        |   LineWork(NONE,b,c,d,e,f) = (TextIO.output(outs,"</u>"); LineWork(NONE,b,c,d,0,f)) (*inserts an underline ending automatically*)
-        |   LineWork(SOME("\n"),1,c,d,e,f) = (TextIO.output(outs,"</p>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f))
-        |   LineWork(SOME("---\n"),1,c,d,e,f) = (TextIO.output(outs,"</p>\n<hr>\n"); LineWork(TextIO.inputLine ins, 0,c,d,e,f))
-        |   LineWork(SOME("---\n"),2,c,d,e,f)= (TextIO.output(outs,"/code></pre>\n<hr>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f))
-        |   LineWork(SOME("---\n"),b,c,d,e,f)= (TextIO.output(outs,"<hr>\n"); LineWork(TextIO.inputLine ins,b,c,d,e,f))
-        |   LineWork(SOME(line),b,c,d,e,0) = 
+        |   LineWork(NONE,1,0,0,0,f,g) = (TextIO.output(outs,"</p>\n"); LineWork(NONE,0,0,0,0,f,g)) (*closes the open paragraph*)
+        |   LineWork(NONE,2,0,0,0,f,g) = (TextIO.output(outs,"</code></pre>"); LineWork(NONE,0,0,0,0,f,g))
+        |   LineWork(NONE,b,c,d,0,f,g) = (TextIO.output(outs, "Asterix wasnt matched"); LineWork(NONE,0,0,0,0,f,g); raise AsterixNotMatched)(*raise AsterixNotMatched*)
+        |   LineWork(NONE,b,c,d,e,f,g) = (TextIO.output(outs,"</u>"); LineWork(NONE,b,c,d,0,f,g)) (*inserts an underline ending automatically*)
+        |   LineWork(SOME("\n"),1,c,d,e,f,g) = (TextIO.output(outs,"</p>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f,g))
+        |   LineWork(SOME("---\n"),1,c,d,e,f,g) = (TextIO.output(outs,"</p>\n<hr>\n"); LineWork(TextIO.inputLine ins, 0,c,d,e,f,g))
+        |   LineWork(SOME("---\n"),2,c,d,e,f,g)= (TextIO.output(outs,"/code></pre>\n<hr>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f,g))
+        |   LineWork(SOME("---\n"),b,c,d,e,f,g)= (TextIO.output(outs,"<hr>\n"); LineWork(TextIO.inputLine ins,b,c,d,e,f,g))
+        |   LineWork(SOME(line),b,c,d,e,0,g) = 
             let 
                 val lspaces = leadingSpaces(explode line,0);
-                val isListItem = checkListItem(#2 lspaces, 0);
+                val isListItem = checkListItem(#2 lspaces);
             in 
                 if(#1 isListItem = 0)  (*not a list, work normally*)
                 then
                     let  
                         val (isInPara, isBold, isItalic, isUnderlined) = header(explode line,0,b,c,d,e);
                     in
-                    LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,0)
+                    LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,0,g)
                     end
                 else
                     let 
                         val tempor = if (b = 1) then TextIO.output(outs,"</p>\n") else 
-                        if (b = 2) then TextIO.output(outs,"</code></pre>") 
+                        if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
                         else ();
-                        val (bl,cl,dl,el) = ListHandler(1,#2 isListItem,0,c,d,e,1); (*now we are in 1 level of list*)
+                        val (bl,cl,dl,el) = ListHandler(#3 isListItem,#2 isListItem,0,c,d,e); (*#3 isListItem denotes the type of list,ol or ul*)
+                             (*now we are in 1 level of list*)
                     in
-                        LineWork(TextIO.inputLine ins,bl,cl,dl,el,1)
+                        LineWork(TextIO.inputLine ins,bl,cl,dl,el,1,(#3 isListItem) :: g)
                     end
             end 
-        |   LineWork(SOME(line),b,c,d,e,f) = 
+        |   LineWork(SOME(line),b,c,d,e,f,g) = 
             let 
                 val lspaces = leadingSpaces(explode line,0)
-                val isListItem = checkListItem(#2 lspaces, 0)
+                val isListItem = checkListItem(#2 lspaces)
             in
                 if(#2 lspaces = [#"\n"]) then (*then it is just a blank line, so we should not close the list *)
                     (*we should just continue ahead in this case as its a blank line only, no need to end our list*)
-                    LineWork(TextIO.inputLine ins,b,c,d,e,f)
-                else if (#1 isListItem = 0 andalso #1 lspaces < f)  (*not a list, so we close the list. as the first item is to the left*)
+                    LineWork(TextIO.inputLine ins,b,c,d,e,f,g)
+                else if (#1 isListItem = 0 andalso #1 lspaces  < f)  (*not a current degree(f) list, so we close the list*)
                 then
-                    if (b = 1) then  (TextIO.output(outs,"</p></li></ol>"); LineWork(SOME(line),0,c,d,e,f-1))
-                    else (TextIO.output(outs,"</li></ol>"); LineWork(SOME(line),b,c,d,e,f-1))
+                    let 
+                        val tempor = if (b = 1) then TextIO.output(outs,"</p>\n") else 
+                        if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
+                        else ();
+                    in
+                        if(hd(g) = 1) then (TextIO.output(outs,"</li></ol>"); LineWork(SOME(line),0,c,d,e,f-1,tl(g))) 
+                        else (TextIO.output(outs,"</li></ul>"); LineWork(SOME(line),0,c,d,e,f-1,tl(g)))
+                    end
                 else if(#1 isListItem = 0 andalso #1 lspaces >= f) then
                     (*then we should parse this normally without applying the tags*)
                     let  
-                        val (isInPara, isBold, isItalic, isUnderlined) = header(explode line,0,b,c,d,e);
+                        val (isInPara, isBold, isItalic, isUnderlined) = header(#2 lspaces,0,b,c,d,e);
                     in
-                    LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,f)
+                    LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,f,g)
                     end (*normal parsing*)
                 else
                 (*is a list*)
                     if(#1 lspaces >= f) 
                     then let
-                        val (bl,cl,dl,el) = ListHandler(1,#2 isListItem,b,c,d,e,f+1);
+                        val tempor = if (b = 1) then TextIO.output(outs,"</p>\n") else 
+                        if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
+                        else (); (*ending the previous paragraph*)
+                        val (b1,cl,dl,el) = ListHandler(#3 isListItem,#2 isListItem,0,c,d,e);
                     in
-                        LineWork(TextIO.inputLine ins, bl,cl,dl,el,f+1)
+                       LineWork(TextIO.inputLine ins, b1,cl,dl,el,f+1,(#3 isListItem)::g)
                     end
                     else
                     if(#1 lspaces = f-1) then 
                     let
+                        (* val tempor = if (b = 1) then TextIO.output(outs,"</p>\n") else 
+                        if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
+                        else (); *)
                         val ok = TextIO.output(outs,"</li>");
-                        val (bl,cl,dl,el) = ListHandler(0,#2 isListItem,b,c,d,e,f); 
+                        val (bl,cl,dl,el) = ListHandler(0,#2 isListItem,b,c,d,e); 
                     in
-                        LineWork(TextIO.inputLine ins, bl,cl,dl,el,f)
+                        LineWork(TextIO.inputLine ins, bl,cl,dl,el,f,g)
                     end
                     else 
-                    let
-                        val ok = TextIO.output(outs,"</li></ol></li>");
-                        (* val (bl,cl,dl,el) = ListHandler(0,#2 isListItem,b,c,d,e,f-1); *)
+                    let 
+                        val tempor = if (b = 1) then TextIO.output(outs,"</p>\n") else 
+                        if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
+                        else ();
+                        val ok = if(hd(g) = 1) then TextIO.output(outs,"</li></ol></li>") else TextIO.output(outs,"</li></ul></li>");
+                        (* val (bl,cl,dl,el) = ListHandler(0,#2 isListItem,b,c,d,e); *)
                     in
-                        LineWork(SOME(line),b,c,d,e,f-1)
+                        LineWork(SOME(line),b,c,d,e,f-1,tl(g))
                     end
             end
                 
     in
-        LineWork(TextIO.inputLine ins, 0,0,0,0,0)
+        LineWork(TextIO.inputLine ins, 0,0,0,0,0,[])
     end;
 
 
