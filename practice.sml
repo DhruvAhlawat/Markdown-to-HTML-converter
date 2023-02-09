@@ -130,7 +130,20 @@ fun mdt2html(infile) =
         |   ListHandler(0,s,b,c,d,e) = (TextIO.output(outs,"<li>"); Parse(s,0,b,c,d,e))
         |   ListHandler(2,s,b,c,d,e) = (TextIO.output(outs,"<ul>"); ListHandler(0,s,b,c,d,e)) (*starts an unordered list*)
     
+        fun countgt(cnt,#">"::t) = countgt(cnt+1,t)
+        |   countgt(cnt,genericList) = cnt;
 
+        fun repeatBQout(0) = ()
+        |   repeatBQout(a) = (TextIO.output(outs,"<blockquote>"); repeatBQout(a-1));
+        (*trying a different implementation than lists for blockquotes, lets see*)
+        fun BlockQuotes(0,retVal,#">"::t) =  retVal
+        |   BlockQuotes(a,b,retVal,#">"::t) =  if(a > b) then BlockQuotes(a,b+1,retVal,t)
+        
+        let 
+            val cnt = countgt(s);
+        in
+            if(cnt > a) then (TextIO.output(outs,"<blockquote>"); BlockQuotes(a+1,retVal,s))
+        end
        
         (*the last parameter of LineWork is a list whose head stores whether we are in ordered list or unordered list*)
 
