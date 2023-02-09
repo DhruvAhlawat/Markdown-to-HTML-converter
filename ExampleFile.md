@@ -79,18 +79,18 @@ simplifications by stripping down and changing some functionalities.
 7. **Lists.** Implement 
 
 - *ordered lists* -- as given by [John Gruber](jg). Pay particular 
-attention to his 1986 example relating to escape sequencing the
-"." in case 1986 comes at the beginning of a line.
+ attention to his 1986 example relating to escape sequencing the
+ "." in case 1986 comes at the beginning of a line.
 - *unordered lists* -- implement only the hyphen (as done here).
 
 1. Implement tables from csv format. Make the simplifying assumption that a HTML table is always
-centered. For example the following is
+ centered. For example the following is
 
-   <<
-   1|2|3|4|9
-   5|6|7|8|10
-   11|12|13|14|15
-   >>
+      <<
+      1|2|3|4|9
+      5|6|7|8|10
+      11|12|13|14|15
+      >>
 
 a possible syntax for an HTML table that looks like
 

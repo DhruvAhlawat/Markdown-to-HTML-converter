@@ -134,7 +134,8 @@ fun mdt2html(infile) =
        
         (*the last parameter of LineWork is a list whose head stores whether we are in ordered list or unordered list*)
 
-        fun LineWork(NONE,0,0,0,0,f,g) = (TextIO.closeIn ins; TextIO.closeOut outs) (*passes the entire state*)
+        fun LineWork(NONE,0,0,0,0,0,g) = (TextIO.closeIn ins; TextIO.closeOut outs) (*passes the entire state*)
+        |   LineWork(NONE,0,0,0,0,f,g) = ((if (hd(g) = 1) then TextIO.output(outs,"</ol>") else TextIO.output(outs,"</ul>")); LineWork(NONE,0,0,0,0,f-1,tl(g))) 
         (* |   LineWork(NONE,0,0,0,0,f) =  *) (*gotta implement recursive closure of lists at the end*)
         |   LineWork(NONE,1,0,0,0,f,g) = (TextIO.output(outs,"</p>\n"); LineWork(NONE,0,0,0,0,f,g)) (*closes the open paragraph*)
         |   LineWork(NONE,2,0,0,0,f,g) = (TextIO.output(outs,"</code></pre>"); LineWork(NONE,0,0,0,0,f,g))
@@ -152,14 +153,15 @@ fun mdt2html(infile) =
                 if(#1 isListItem = 0)  (*not a list, work normally*)
                 then
                     let  
+                        val b = if(b = 1 andalso #2 lspaces = [#"\n"]) then (TextIO.output(outs,"</p>");0) else b;
                         val (isInPara, isBold, isItalic, isUnderlined) = header(explode line,0,b,c,d,e);
+                        
                     in
-                    (if(b = 1 andalso #2 lspaces = [#"\n"]) then TextIO.output(outs,"</p>") else ();
-                    LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,0,g))
+                        LineWork(TextIO.inputLine ins,isInPara , isBold, isItalic, isUnderlined,0,g)
                     end
                 else
                     let 
-                        val tempor = if (b = 1 andalso #2 lspaces = [#"\n"]) then TextIO.output(outs,"</p>\n") else 
+                        val tempor = if (b = 1) then TextIO.output(outs,"</p>\n") else 
                         if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
                         else ();
                         val (bl,cl,dl,el) = ListHandler(#3 isListItem,#2 isListItem,0,c,d,e); (*#3 isListItem denotes the type of list,ol or ul*)
@@ -179,7 +181,7 @@ fun mdt2html(infile) =
                     (if (b = 1 andalso #2 lspaces = [#"\n"]) then TextIO.output(outs,"</p>\n") else 
                         if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
                         else ();
-                    LineWork(TextIO.inputLine ins,b,c,d,e,f,g))
+                    LineWork(TextIO.inputLine ins,0,c,d,e,f,g))
                 else if (#1 isListItem = 0 andalso #1 lspaces  < f)  (*not a current degree(f) list, so we close the list*)
                 then
                     let 
@@ -241,7 +243,7 @@ val ins = TextIO.openIn "MarkdownTest.md";
 val outs = TextIO.openOut "filename.html"; 
 *)
 
-
-mdt2html "MarkdownTest.md";
+mdt2html "README.md";
 mdt2html "ExampleFile.md"; 
 
+mdt2html "MarkdownTest.md";
