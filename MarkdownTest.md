@@ -7,7 +7,5 @@ any row can have aribitrary number of columns but it is recommended otherwise
 ---
 
 1. hello world
- ---
 2. hello there
----
 3. somehow this be working
