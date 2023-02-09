@@ -126,16 +126,16 @@ fun mdt2html(infile) =
             ListHandler(toParseNext)
         end; *)
 
-        fun ListHandler(1,s,b,c,d,e) = (TextIO.output(outs,"<ol><li>"); Parse(s,0,b,c,d,e)) 
+        fun ListHandler(1,s,b,c,d,e) = (TextIO.output(outs,"<ol>"); ListHandler(0,s,b,c,d,e)) 
         |   ListHandler(0,s,b,c,d,e) = (TextIO.output(outs,"<li>"); Parse(s,0,b,c,d,e))
-        |   ListHandler(2,s,b,c,d,e) = (TextIO.output(outs,"<ul><li>"); Parse(s,0,b,c,d,e)) (*starts an unordered list*)
+        |   ListHandler(2,s,b,c,d,e) = (TextIO.output(outs,"<ul>"); ListHandler(0,s,b,c,d,e)) (*starts an unordered list*)
     
 
        
         (*the last parameter of LineWork is a list whose head stores whether we are in ordered list or unordered list*)
 
         fun LineWork(NONE,0,0,0,0,0,g) = (TextIO.closeIn ins; TextIO.closeOut outs) (*passes the entire state*)
-        |   LineWork(NONE,0,0,0,0,f,g) = ((if (hd(g) = 1) then TextIO.output(outs,"</ol>") else TextIO.output(outs,"</ul>")); LineWork(NONE,0,0,0,0,f-1,tl(g))) 
+        |   LineWork(NONE,0,0,0,0,f,g) = ((if (hd(g) = 1) then TextIO.output(outs,"</li></ol>") else TextIO.output(outs,"</li></ul>")); LineWork(NONE,0,0,0,0,f-1,tl(g))) 
         (* |   LineWork(NONE,0,0,0,0,f) =  *) (*gotta implement recursive closure of lists at the end*)
         |   LineWork(NONE,1,0,0,0,f,g) = (TextIO.output(outs,"</p>\n"); LineWork(NONE,0,0,0,0,f,g)) (*closes the open paragraph*)
         |   LineWork(NONE,2,0,0,0,f,g) = (TextIO.output(outs,"</code></pre>"); LineWork(NONE,0,0,0,0,f,g))
@@ -245,5 +245,4 @@ val outs = TextIO.openOut "filename.html";
 
 mdt2html "README.md";
 mdt2html "ExampleFile.md"; 
-
 mdt2html "MarkdownTest.md";
