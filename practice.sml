@@ -131,46 +131,61 @@ fun mdt2html(infile) =
         |   ListHandler(2,s,b,c,d,e) = (TextIO.output(outs,"<ul>"); ListHandler(0,s,b,c,d,e)) (*starts an unordered list*)
     
         fun countgt(cnt,#">"::t) = countgt(cnt+1,t)
-        |   countgt(cnt,genericList) = cnt;
+        |   countgt(cnt,genericList) = (cnt,genericList);
 
-        fun repeatBQout(0) = ()
-        |   repeatBQout(a) = (TextIO.output(outs,"<blockquote>"); repeatBQout(a-1));
-        (*trying a different implementation than lists for blockquotes, lets see*)
-        fun BlockQuotes(0,retVal,#">"::t) =  retVal
-        |   BlockQuotes(a,b,retVal,#">"::t) =  if(a > b) then BlockQuotes(a,b+1,retVal,t)
+        fun repeatBQout(0,a) = ()
+        |   repeatBQout(a,0) = (TextIO.output(outs,"\n<blockquote>"); repeatBQout(a-1,0))
+        |   repeatBQout(a,b) = (TextIO.output(outs,"<\blockquote>\n"); repeatBQout(a-1,1));
+
+
+        (*trying a different implementation than lists for blockquotes, lets see*) (*mutual recursion with the lineWork function*)
+        (*opening and closing of brackets handled by BlockQuotes function itself, rather than states*)
+        (* fun BlockQuotes(0,retVal,#">"::t) =  retVal
+        |   BlockQuotes(a,b,retVal,#">"::t) =  if(a > b) then BlockQuotes(a,b+1,retVal,t) 
+        else if(a = b) then (TextIO.output("<blockquote>"); BlockQuotes(a+1,b+1,retVal,t))
+        else t (*a will never be lesser than b*)
+        |   BlockQuotes(a,b,retVal,s) = if(a > b) then (TextIO.output(outs,"</blockquote>"); BlockQuotes(a-1,b,retVal,s))
+        else if(a=b)  then if(a = 0) then s else 
+        let
+            val nextLine = TextIO.inputLine ins;
+            val retValues = LineWork(ins,#1 retVal,#2 retVal,#3 retVal,#4 retVal,#1 retVal)                                          (*now we have finished the sequence of > characters and can start the actual parsing*)
         
         let 
             val cnt = countgt(s);
         in
             if(cnt > a) then (TextIO.output(outs,"<blockquote>"); BlockQuotes(a+1,retVal,s))
         end
-       
-        (*the last parameter of LineWork is a list whose head stores whether we are in ordered list or unordered list*)
+        *)
+        (*the g parameter of LineWork is a list whose head stores whether we are in ordered list or unordered list*)
+        (* *)
 
-        fun LineWork(NONE,0,0,0,0,0,g) = (TextIO.closeIn ins; TextIO.closeOut outs) (*passes the entire state*)
-        |   LineWork(NONE,0,0,0,0,f,g) = ((if (hd(g) = 1) then TextIO.output(outs,"</li></ol>") else TextIO.output(outs,"</li></ul>")); LineWork(NONE,0,0,0,0,f-1,tl(g))) 
+        fun LineWork(NONE,0,0,0,0,0,g,h,i) = (TextIO.closeIn ins; TextIO.closeOut outs) (*passes the entire state*)
+        |   LineWork(NONE,0,0,0,0,f,g,h,i) = ((if (hd(g) = 1) then TextIO.output(outs,"</li></ol>") else TextIO.output(outs,"</li></ul>")); LineWork(NONE,0,0,0,0,f-1,tl(g),h,i)) 
         (* |   LineWork(NONE,0,0,0,0,f) =  *) (*gotta implement recursive closure of lists at the end*)
-        |   LineWork(NONE,1,0,0,0,f,g) = (TextIO.output(outs,"</p>\n"); LineWork(NONE,0,0,0,0,f,g)) (*closes the open paragraph*)
-        |   LineWork(NONE,2,0,0,0,f,g) = (TextIO.output(outs,"</code></pre>"); LineWork(NONE,0,0,0,0,f,g))
-        |   LineWork(NONE,b,c,d,0,f,g) = (TextIO.output(outs, "Asterix wasnt matched"); LineWork(NONE,0,0,0,0,f,g); raise AsterixNotMatched)(*raise AsterixNotMatched*)
-        |   LineWork(NONE,b,c,d,e,f,g) = (TextIO.output(outs,"</u>"); LineWork(NONE,b,c,d,0,f,g)) (*inserts an underline ending automatically*)
-        |   LineWork(SOME("\n"),1,c,d,e,f,g) = (TextIO.output(outs,"</p>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f,g))
-        |   LineWork(SOME("---\n"),1,c,d,e,f,g) = (TextIO.output(outs,"</p>\n<hr>\n"); LineWork(TextIO.inputLine ins, 0,c,d,e,f,g))
-        |   LineWork(SOME("---\n"),2,c,d,e,f,g)= (TextIO.output(outs,"/code></pre>\n<hr>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f,g))
-        |   LineWork(SOME("---\n"),b,c,d,e,f,g)= (TextIO.output(outs,"<hr>\n"); LineWork(TextIO.inputLine ins,b,c,d,e,f,g))
-        |   LineWork(SOME(line),b,c,d,e,0,g) = 
+        |   LineWork(NONE,1,0,0,0,f,g,h,i) = (TextIO.output(outs,"</p>\n"); LineWork(NONE,0,0,0,0,f,g,h,i)) (*closes the open paragraph*)
+        |   LineWork(NONE,2,0,0,0,f,g,h,i) = (TextIO.output(outs,"</code></pre>"); LineWork(NONE,0,0,0,0,f,g,h,i))
+        |   LineWork(NONE,b,c,d,0,f,g,h,i) = (TextIO.output(outs, "Asterix wasnt matched"); LineWork(NONE,0,0,0,0,f,g,h,i); raise AsterixNotMatched)(*raise AsterixNotMatched*)
+        |   LineWork(NONE,b,c,d,e,f,g,h,i) = (TextIO.output(outs,"</u>"); LineWork(NONE,b,c,d,0,f,g,h,i)) (*inserts an underline ending automatically*)
+        |   LineWork(SOME("\n"),1,c,d,e,f,g,h,i) = (TextIO.output(outs,"</p>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f,g,h,i))
+        |   LineWork(SOME("---\n"),1,c,d,e,f,g,h,i) = (TextIO.output(outs,"</p>\n<hr>\n"); LineWork(TextIO.inputLine ins, 0,c,d,e,f,g,h,i))
+        |   LineWork(SOME("---\n"),2,c,d,e,f,g,h,i)= (TextIO.output(outs,"/code></pre>\n<hr>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f,g,h,i))
+        |   LineWork(SOME("---\n"),b,c,d,e,f,g,h,i)= (TextIO.output(outs,"<hr>\n"); LineWork(TextIO.inputLine ins,b,c,d,e,f,g,h,i))
+        |   LineWork(SOME(line),b,c,d,e,0,g,h,i) = 
             let 
-                val lspaces = leadingSpaces(explode line,0);
+                val explodedLine = explode line;
+                val lspaces = leadingSpaces(explodedLine,0);
                 val isListItem = checkListItem(#2 lspaces);
             in 
                 if(#1 isListItem = 0)  (*not a list, work normally*)
                 then
                     let  
                         val b = if(b = 1 andalso #2 lspaces = [#"\n"]) then (TextIO.output(outs,"</p>");0) else b;
-                        val (isInPara, isBold, isItalic, isUnderlined) = header(explode line,0,b,c,d,e);
-                        
+                        (* val (cntgt,cLine) = countgt(0,explodedLine);
+                        val (newH,newI) = if(cntgt > h) then (repeatBQout(cntgt-h,0); (cntgt,cntgt)) else if(cntgt = h) then (h,h) 
+                        else (repeatBQout(h-cntgt,1); (cntgt,cntgt)); (*cntgt is lower than h so we reduce here*)  *)
+                        val (isInPara, isBold, isItalic, isUnderlined) = header(explodedLine,0,b,c,d,e);
                     in
-                        LineWork(TextIO.inputLine ins,isInPara , isBold, isItalic, isUnderlined,0,g)
+                        LineWork(TextIO.inputLine ins,isInPara , isBold, isItalic, isUnderlined,0,g,h,i)
                     end
                 else
                     let 
@@ -180,10 +195,10 @@ fun mdt2html(infile) =
                         val (bl,cl,dl,el) = ListHandler(#3 isListItem,#2 isListItem,0,c,d,e); (*#3 isListItem denotes the type of list,ol or ul*)
                              (*now we are in 1 level of list*)
                     in
-                        LineWork(TextIO.inputLine ins,bl,cl,dl,el,1,(#3 isListItem) :: g)
+                        LineWork(TextIO.inputLine ins,bl,cl,dl,el,1,(#3 isListItem) :: g,h,i)
                     end
             end 
-        |   LineWork(SOME(line),b,c,d,e,f,g) = 
+        |   LineWork(SOME(line),b,c,d,e,f,g,h,i) = 
             let 
                 val explodedLine = explode line;
                 val lspaces = leadingSpaces(explodedLine,0)
@@ -191,10 +206,10 @@ fun mdt2html(infile) =
             in
                 if(#2 lspaces = [#"\n"]) then (*then it is just a blank line, so we should not close the list *)
                     (*we should just continue ahead in this case as its a blank line only, no need to end our list*)
-                    (if (b = 1 andalso #2 lspaces = [#"\n"]) then TextIO.output(outs,"</p>\n") else 
+                    (if (b = 1) then TextIO.output(outs,"</p>\n") else 
                         if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
                         else ();
-                    LineWork(TextIO.inputLine ins,0,c,d,e,f,g))
+                    LineWork(TextIO.inputLine ins,0,c,d,e,f,g,h,i))
                 else if (#1 isListItem = 0 andalso #1 lspaces  < f)  (*not a current degree(f) list, so we close the list*)
                 then
                     let 
@@ -202,15 +217,15 @@ fun mdt2html(infile) =
                         if (b = 2) then TextIO.output(outs,"</code></pre>")  (*closes previously open stuff*)
                         else ();
                     in
-                        if(hd(g) = 1) then (TextIO.output(outs,"</li></ol>"); LineWork(SOME(line),0,c,d,e,f-1,tl(g))) 
-                        else (TextIO.output(outs,"</li></ul>"); LineWork(SOME(line),0,c,d,e,f-1,tl(g)))
+                        if(hd(g) = 1) then (TextIO.output(outs,"</li></ol>"); LineWork(SOME(line),0,c,d,e,f-1,tl(g),h,i)) 
+                        else (TextIO.output(outs,"</li></ul>"); LineWork(SOME(line),0,c,d,e,f-1,tl(g),h,i))
                     end
                 else if(#1 isListItem = 0 andalso #1 lspaces >= f) then
                     (*then we should parse this normally without applying the tags*)
                     let  
                         val (isInPara, isBold, isItalic, isUnderlined) = header(removeFirstK(explodedLine,f),0,b,c,d,e);
                     in
-                        LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,f,g)
+                        LineWork(TextIO.inputLine ins, isInPara, isBold, isItalic, isUnderlined,f,g,h,i)
                     end (*normal parsing*)
                 else
                 (*is a list*)
@@ -221,7 +236,7 @@ fun mdt2html(infile) =
                         else (); (*ending the previous paragraph*)
                         val (b1,cl,dl,el) = ListHandler(#3 isListItem,#2 isListItem,0,c,d,e);
                     in
-                       LineWork(TextIO.inputLine ins, b1,cl,dl,el,f+1,(#3 isListItem)::g)
+                       LineWork(TextIO.inputLine ins, b1,cl,dl,el,f+1,(#3 isListItem)::g,h,i)
                     end
                     else
                     if(#1 lspaces = f-1) then 
@@ -232,7 +247,7 @@ fun mdt2html(infile) =
                         val ok = TextIO.output(outs,"</li>");
                         val (bl,cl,dl,el) = ListHandler(0,#2 isListItem,b,c,d,e); 
                     in
-                        LineWork(TextIO.inputLine ins, bl,cl,dl,el,f,g)
+                        LineWork(TextIO.inputLine ins, bl,cl,dl,el,f,g,h,i)
                     end
                     else 
                     let 
@@ -242,13 +257,19 @@ fun mdt2html(infile) =
                         val ok = if(hd(g) = 1) then TextIO.output(outs,"</li></ol>") else TextIO.output(outs,"</li></ul>");
                         (* val (bl,cl,dl,el) = ListHandler(0,#2 isListItem,b,c,d,e); *)
                     in
-                        LineWork(SOME(line),b,c,d,e,f-1,tl(g))
+                        LineWork(SOME(line),b,c,d,e,f-1,tl(g),h,i)
                     end
             end
                 
     in
-        LineWork(TextIO.inputLine ins, 0,0,0,0,0,[])
+        LineWork(TextIO.inputLine ins, 0,0,0,0,0,[],0,0)
     end;
+
+(*tbh, I probably could have implemented this much better. Instead of a self recursively calling function like Linework, I should have instead returned its
+parameter values and let an outer function handle the rest and call it again. That way I could have encapsulated LineWork into any other
+framework as well, calling LineWork when necessary. But as it stands, LineWork once called will keep on calling itself till the file ends
+But I have already come so far so I decided to go with how it is.*)
+
 
 
 (* 
@@ -259,3 +280,4 @@ val outs = TextIO.openOut "filename.html";
 mdt2html "README.md";
 mdt2html "ExampleFile.md"; 
 mdt2html "MarkdownTest.md";
+mdt2html "InputMarkdown.md"
