@@ -169,7 +169,7 @@ fun mdt2html(infile) =
         fun ParseTable([],a,b,c,d,e) = (b,c,d,e) (*empty so we should just return if we are in a paragraph*)
         |   ParseTable(h::t,0,b,c,d,e) = (TextIO.output(outs,"<TR><TD>"); ParseTable(h::t,1,b,c,d,e))
         |   ParseTable(#"|"::t,a,b,0,0,0) = (TextIO.output(outs,"</TD><TD>"); ParseTable(t,a+1,b,0,0,0))
-        |   ParseTable(#"|"::t,a,b,c,d,e) = (TextIO.output(outs,"<strong>Please close all bolds, underlines (with a space at the end) and italics within the cell of the table it was opened in</strong>");TextIO.closeIn ins; TextIO.closeOut outs; raise underlineOrBoldOrItalicNotEndedInsideTableCell) (*the * or _ isnt properly closed*)
+        |   ParseTable(#"|"::t,a,b,c,d,e) = (TextIO.output(outs,"<strong>Please close all bolds, underlines (with a space at the end) and italics within the cell of the table it was opened in</strong>"); raise underlineOrBoldOrItalicNotEndedInsideTableCell) (*the * or _ isnt properly closed*)
         |   ParseTable(#"\\" :: t,a,b,c,d,e) = ParseTable(escape(t),a,b,c,d,e) (*escape characters*)
         |   ParseTable(#"*" :: #"*" :: t,a,b,0,d,e) = (TextIO.output(outs,"<strong>"); ParseTable(t,a+1,b,1,d,e))
         |   ParseTable(#"*" :: #"*" :: t,a,b,1,d,e) = (TextIO.output(outs,"</strong>"); ParseTable(t,a+1,b,0,d,e))
@@ -179,7 +179,7 @@ fun mdt2html(infile) =
         |   ParseTable(#"_" :: (#" " | #"\n") :: t,a,b,c,d,1) = (TextIO.output(outs,"</u> "); ParseTable(#" "::t,a+1,b,c,d,0))
         |   ParseTable(#"_" :: t,a,b,c,d,1) = (TextIO.output1(outs,#" "); ParseTable(t,a,b,c,d,1))
         |   ParseTable([#"\n"],a,b,0,0,0) = (TextIO.output(outs,"</TD></TR>\n"); (b,0,0,0))
-        |   ParseTable([#"\n"],a,b,c,d,e) = (TextIO.output(outs,"<strong>Please close all bolds, underlines (with a space at the end) and italics within the cell of the table it was opened in</strong>");TextIO.closeIn ins; TextIO.closeOut outs; raise underlineOrBoldOrItalicNotEndedInsideTableCell) (*the * or _ isnt properly closed*)
+        |   ParseTable([#"\n"],a,b,c,d,e) = (TextIO.output(outs,"<strong>Please close all bolds, underlines (with a space at the end) and italics within the cell of the table it was opened in</strong>"); raise underlineOrBoldOrItalicNotEndedInsideTableCell) (*the * or _ isnt properly closed*)
         |   ParseTable(h::t,a,b,c,d,e) = (TextIO.output1(outs,h); ParseTable(t,a+1,b,c,d,e));
 
         fun getExplodedNextLine() = 
@@ -192,7 +192,6 @@ fun mdt2html(infile) =
         fun Table(#"<":: #"<" :: t) = (TextIO.output(outs,"<CENTER><TABLE border= \"1\">"); Table(getExplodedNextLine()))
         |   Table(#">":: #">" :: t) = TextIO.output(outs,"</TABLE></CENTER>")
         |   Table(s) = (ParseTable(s,0,0,0,0,0); Table(getExplodedNextLine()));
-
 
         fun LineWork(NONE,0,0,0,0,0,g,h,i) = (TextIO.closeIn ins; TextIO.closeOut outs) (*passes the entire state*)
         |   LineWork(NONE,0,0,0,0,f,g,h,i) = ((if (hd(g) = 1) then TextIO.output(outs,"</li></ol>") else TextIO.output(outs,"</li></ul>")); LineWork(NONE,0,0,0,0,f-1,tl(g),h,i)) 

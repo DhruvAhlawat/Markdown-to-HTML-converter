@@ -1,0 +1,56 @@
+<h2> Some design decisions I took
+</h2><p>
+(Note that there are some whitespace characters that are not space or tabspace in the mdtab-2023.mdt file, so please backspace and put the spaces again, or shift+Tab the whole and then tab again )
+</p>
+<p><ol><li>(---) is implemented as a dashed line ONLY when these are the only 3 characters on any line. This was done for more readability and so any random --- does not expand to a horizontal rule. also, no whitespace characters should be present before or after. (after this only the "n" character must be there)
+</p>
+</li><li><p>
+Codeblocks are implemented as according to markdown, so if an indented block follows a paragraph without a blank line in between, it will be considered to be a part of the paragraph instead of a codeblock. Hence a blankline separating codeblock from paragraphs are necessary
+</p>
+</li><li><p>
+All escape characters are properly dealt with.
+</p>
+</li><li><p>
+Errors and exceptions 
+</p>
+<p><ul><li>* and - need to be escaped. If any * is found that does not correspond to a bold, italic or list form then an <strong>AsterixNotMatched</strong> Error is raised and also printed in the html file at the end.
+</li><li>if an open "[" is found without escaping, then it throws a <strong>bracketNotMatched</strong> error if it doesnt close in the same line.
+in case it is supposed to be a link, then a "(.)" clause should follow right after the "]" ends, otherwise it will be printed normally.
+</p>
+</li></ul></li><li><p>
+codeblocks works fine for four spaces always BUT they should be 4 or more spaces or 1 or more tabs.In the assignment's .md file, the link "cse.iitd.ac.in" has unnatural non-printable spaces behind it, so it doesn't directly work but works after backspacing and adding normal spaces back again.
+</p>
+</li><li><p>
+since table is a multiline thing, I enforced that the starting << must be the first characters on the line to start a table format.  and no leading spaces should be added
+</p>
+</li><li><p>
+underlining is delimited by space. An underscore after the underlined text is not necessary and a simple space can signify the end of  the underlining, but an underscore before the text is necessary. Hence  _under_line will also output as <u>under line</u> (a space is  there as well, since thats how its given in the Assignment.). Its important to note that either newline can only delimit it iff theres an  ending underscore as well, so ending with "_n" works fine but without the underscore it would instead go to the newline
+</p>
+</li><li><p>
+Nested lists are a little weird as done by John Gruber. Its unclear how many spaces are needed for each nest. In markdown one space   would be enough to make a nested list (1st degree), but if you add 2 or 3 spaces before next  element it wouldn't nest another list and  make a 2nd degree list but instead be considered as part of the same 1st degree list. It takes 5 spaces for a 2nd degree nested list to  form in markdown. example is given as the next list, of which you can see the source of. 
+But the way I have implemented is as follows
+</p>
+<p><ul><li>the number of spaces behind the start of the numbering, denotes the number of nests, so if there was " 1." written at the start then it would be considered to be a nest inside the first list point above it that has fewer leading spaces. and "  1." would be nested inside the first point above it with lesser than 2 leading spaces and so on. this makes it easy to nest. 
+</li><li>each paragraph has a blank line in between, like original markdown.
+</li><li>all the text in the same point should start after (n+1) spaces from the left, if we are in the nth nested list. so for an unnested list, all the lines should begin with 1 space to be considered part of the list point, otherwise the list would be ended and a paragraph started.
+</p>
+</li></ul><p>
+aside from these nesting rules, like markdown, if theres a blank line between 2 list items then they behave like paragraphs tags are added onto them. (Although the paragraph tags are not exactly situated as in markdown, the but the HTML result displayed is the same)
+</p>
+</li><li><p>
+example Markdown List to show the unclear number of leading spaces it takes for nesting multiple levels
+</p>
+<p><ul><li>1space
+</p>
+<p><ul><li>2space
+</p>
+<p><ul><li>3space
+</p>
+<p><ul><li>4space
+</p>
+<p><ul><li>5space
+</p>
+</li></ul></li></ul></li></ul></li></ul></li></ul></li><li><p>
+for tables, it is mandatory for << and >> to be on a separate line and immediately be followed by a newline character. Bolding,underline,italics work well within each cell of the table, but html doesnt allow bolding to be done accross multiple cells with one tag, so the way I have implemented requires the * or ** to end within the same cell
+</p>
+</li></ol>
