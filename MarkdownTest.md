@@ -1,20 +1,13 @@
-1. hello world
- this is continuation of the same line
+<<
+*hello world* | **hello world** | this is normal
+_underlined_text_     | and then some normal text | and then digits?
+but | oadjnf 
+any row can have aribitrary number of columns but it is recommended otherwise
+>>
+---
 
- this is another paragraph but ok
- 2. this is a nested list
-2. this is the next point
- para
- para
- para
-3. another para for this paragraph 
- - a nested
- - a nested
-  - another level of nest
-   - another level 
-    - another level
-     would this be a codeblock
-      or would this
-       or would this
-        or would this
-         <body>
+1. hello world
+ ---
+2. hello there
+---
+3. somehow this be working
