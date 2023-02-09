@@ -17,7 +17,7 @@
 
 6. underlining is delimited by space. An underscore after the underlined text is not necessary and a simple space can signify the end of  the underlining, but an underscore before the text is necessary. Hence  \_under\_line will also output as <u>under line</u> (a space is  there as well, since thats how its given in the Assignment.). Its important to note that either newline can only delimit it iff theres an  ending underscore as well, so ending with "\_\n" works fine but without the underscore it would instead go to the newline
 
-2. Nested lists are a little weird as done by John Gruber. Its unclear how many spaces are needed for each nest. In markdown one space   would be enough to make a nested list (1st degree), but if you add 2 or 3 spaces before next element it wouldn't nest another list and  make a 2nd degree list but instead be considered as part of the same 1st degree list. It takes 5 spaces for a 2nd degree nested list to  form in markdown. example is given as the next list, of which you can see the source of. 
+2. Nested lists are a little weird as done by John Gruber. Its unclear how many spaces are needed for each nest. In markdown one space   would be enough to make a nested list (1st degree), but if you add 2 or 3 spaces before next  element it wouldn't nest another list and  make a 2nd degree list but instead be considered as part of the same 1st degree list. It takes 5 spaces for a 2nd degree nested list to  form in markdown. example is given as the next list, of which you can see the source of. 
  But the way I have implemented is as follows
  - the number of spaces behind the start of the numbering, denotes the number of nests, so if there was " 1." written at the start then it would be considered to be a nest inside the first list point above it that has fewer leading spaces. and "  1." would be nested inside the first point above it with lesser than 2 leading spaces and so on. this makes it easy to nest. 
  - each paragraph has a blank line in between, like original markdown.
@@ -29,4 +29,6 @@
    - 3space
     - 4space
      - 5space
+
+7. for tables, it is mandatory for << and >> to be on a separate line and immediately be followed by a newline character. Bolding,underline,italics work well within each cell of the table, but html doesnt allow bolding to be done accross multiple cells with one tag, so the way I have implemented requires the \* or \*\* to end within the same cell
 

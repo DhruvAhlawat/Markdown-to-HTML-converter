@@ -12,6 +12,7 @@ fun mdt2html(infile) =
         (* fun bold(#"*" :: #"*" :: t) *)
         exception AsterixNotMatched;
         exception BracketErrorInLinkPlacement;
+        exception underlineOrBoldOrItalicNotEndedInsideTableCell;
 
         fun HeadString(cnt,0) = "<h"^(String.str(Char.chr(cnt + Char.ord(#"0")))^">")
         |   HeadString(cnt,a) = "</h"^(String.str(Char.chr(cnt + Char.ord(#"0")))^">");
@@ -69,8 +70,14 @@ fun mdt2html(infile) =
         |   Parse(#"*" :: t,a,b,c,0,e) = (TextIO.output(outs,"<em>"); Parse(t,a,b,c,1,e))
         |   Parse(#"*" :: t,a,b,c,1,e) = (TextIO.output(outs,"</em>"); Parse(t,a,b,c,0,e))
         |   Parse(#"_" :: t,a,b,c,d,0) = (TextIO.output(outs,"<u>"); Parse(t,a,b,c,d,1))
-        |   Parse(#"_" :: (#" " | #"\n") :: t,a,b,c,d,1) = (TextIO.output(outs,"</u> "); Parse(t,a,b,c,d,0))
+        |   Parse(#"_" :: (#" " | #"\n") :: t,a,b,c,d,1) = (TextIO.output(outs,"</u> "); Parse(#" "::t,a,b,c,d,0))
+        |   Parse(#"_" :: t,a,b,c,d,1) = (TextIO.output1(outs,#" "); Parse(t,a,b,c,d,1))
         |   Parse(h::t,a,b,c,d,e) = (TextIO.output1(outs,h); Parse(t,a+1,1,c,d,e));
+
+      
+
+
+       
 
 
         fun leadingSpaces(#" " :: t, cnt) = leadingSpaces(t, cnt + 1)
@@ -159,6 +166,33 @@ fun mdt2html(infile) =
         (*the g parameter of LineWork is a list whose head stores whether we are in ordered list or unordered list*)
         (* *)
 
+        fun ParseTable([],a,b,c,d,e) = (b,c,d,e) (*empty so we should just return if we are in a paragraph*)
+        |   ParseTable(h::t,0,b,c,d,e) = (TextIO.output(outs,"<TR><TD>"); ParseTable(h::t,1,b,c,d,e))
+        |   ParseTable(#"|"::t,a,b,0,0,0) = (TextIO.output(outs,"</TD><TD>"); ParseTable(t,a+1,b,0,0,0))
+        |   ParseTable(#"|"::t,a,b,c,d,e) = (TextIO.output(outs,"<strong>Please close all bolds, underlines (with a space at the end) and italics within the cell of the table it was opened in</strong>"); raise underlineOrBoldOrItalicNotEndedInsideTableCell) (*the * or _ isnt properly closed*)
+        |   ParseTable(#"\\" :: t,a,b,c,d,e) = ParseTable(escape(t),a,b,c,d,e) (*escape characters*)
+        |   ParseTable(#"*" :: #"*" :: t,a,b,0,d,e) = (TextIO.output(outs,"<strong>"); ParseTable(t,a+1,b,1,d,e))
+        |   ParseTable(#"*" :: #"*" :: t,a,b,1,d,e) = (TextIO.output(outs,"</strong>"); ParseTable(t,a+1,b,0,d,e))
+        |   ParseTable(#"*" :: t,a,b,c,0,e) = (TextIO.output(outs,"<em>"); ParseTable(t,a+1,b,c,1,e))
+        |   ParseTable(#"*" :: t,a,b,c,1,e) = (TextIO.output(outs,"</em>"); ParseTable(t,a+1,b,c,0,e))
+        |   ParseTable(#"_" :: t,a,b,c,d,0) = (TextIO.output(outs,"<u>"); ParseTable(t,a+1,b,c,d,1))
+        |   ParseTable(#"_" :: (#" " | #"\n") :: t,a,b,c,d,1) = (TextIO.output(outs,"</u> "); ParseTable(#" "::t,a+1,b,c,d,0))
+        |   ParseTable(#"_" :: t,a,b,c,d,1) = (TextIO.output1(outs,#" "); ParseTable(t,a,b,c,d,1))
+        |   ParseTable([#"\n"],a,b,0,0,0) = (TextIO.output(outs,"</TD></TR>\n"); (b,0,0,0))
+        |   ParseTable([#"\n"],a,b,c,d,e) = (TextIO.output(outs,"<strong>Please close all bolds, underlines (with a space at the end) and italics within the cell of the table it was opened in</strong>"); raise underlineOrBoldOrItalicNotEndedInsideTableCell) (*the * or _ isnt properly closed*)
+        |   ParseTable(h::t,a,b,c,d,e) = (TextIO.output1(outs,h); ParseTable(t,a+1,b,c,d,e));
+
+        fun getExplodedNextLine() = 
+        let 
+            val SOME(nl) = TextIO.inputLine ins;
+        in
+            explode nl
+        end;
+
+        fun Table(#"<":: #"<" :: t) = (TextIO.output(outs,"<CENTER><TABLE border= \"1\">"); Table(getExplodedNextLine()))
+        |   Table(#">":: #">" :: t) = TextIO.output(outs,"</TABLE></CENTER>")
+        |   Table(s) = (ParseTable(s,0,0,0,0,0); Table(getExplodedNextLine()));
+
         fun LineWork(NONE,0,0,0,0,0,g,h,i) = (TextIO.closeIn ins; TextIO.closeOut outs) (*passes the entire state*)
         |   LineWork(NONE,0,0,0,0,f,g,h,i) = ((if (hd(g) = 1) then TextIO.output(outs,"</li></ol>") else TextIO.output(outs,"</li></ul>")); LineWork(NONE,0,0,0,0,f-1,tl(g),h,i)) 
         (* |   LineWork(NONE,0,0,0,0,f) =  *) (*gotta implement recursive closure of lists at the end*)
@@ -166,6 +200,7 @@ fun mdt2html(infile) =
         |   LineWork(NONE,2,0,0,0,f,g,h,i) = (TextIO.output(outs,"</code></pre>"); LineWork(NONE,0,0,0,0,f,g,h,i))
         |   LineWork(NONE,b,c,d,0,f,g,h,i) = (TextIO.output(outs, "Asterix wasnt matched"); LineWork(NONE,0,0,0,0,f,g,h,i); raise AsterixNotMatched)(*raise AsterixNotMatched*)
         |   LineWork(NONE,b,c,d,e,f,g,h,i) = (TextIO.output(outs,"</u>"); LineWork(NONE,b,c,d,0,f,g,h,i)) (*inserts an underline ending automatically*)
+        |   LineWork(SOME("<<\n"),b,c,d,e,f,g,h,i) = (Table(explode "<<\n"); LineWork(TextIO.inputLine ins,b,c,d,e,f,g,h,i))
         |   LineWork(SOME("\n"),1,c,d,e,f,g,h,i) = (TextIO.output(outs,"</p>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f,g,h,i))
         |   LineWork(SOME("---\n"),1,c,d,e,f,g,h,i) = (TextIO.output(outs,"</p>\n<hr>\n"); LineWork(TextIO.inputLine ins, 0,c,d,e,f,g,h,i))
         |   LineWork(SOME("---\n"),2,c,d,e,f,g,h,i)= (TextIO.output(outs,"/code></pre>\n<hr>\n"); LineWork(TextIO.inputLine ins,0,c,d,e,f,g,h,i))
@@ -279,5 +314,5 @@ val outs = TextIO.openOut "filename.html";
 
 mdt2html "README.md";
 mdt2html "ExampleFile.md"; 
+mdt2html "InputMarkdown.md";
 mdt2html "MarkdownTest.md";
-mdt2html "InputMarkdown.md"
