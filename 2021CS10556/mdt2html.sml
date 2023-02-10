@@ -1,3 +1,5 @@
+(* include IMPERATIVE_IO *)
+
 (*throughout the code, the letter b stands for whether we are in a paragraph or not, c stands for bold, d for italics, e for underline*)
 (**)
 fun mdt2html(infile) =
@@ -276,6 +278,6 @@ framework as well, calling LineWork when necessary. But as it stands, LineWork o
 But I have already come so far so I decided to go with how it is. Still, I am glad I was able to finish it just 30mins before the deadline,
 and I had quite a lotta fun as it required a lot of thinking*)
 
-mdt2html "MarkdownTest";
-mdt2html "README"; 
+
+(* mdt2html "README"; *)
 
