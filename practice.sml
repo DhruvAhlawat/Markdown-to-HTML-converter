@@ -2,7 +2,7 @@
 (**)
 fun mdt2html(infile) =
     let
-        val ins = TextIO.openIn (infile^".mdt");
+        val ins = TextIO.openIn (infile^".md");
         val outs = TextIO.openOut (infile^".html");
 
         (* fun bold(#"*" :: #"*" :: t) *)
@@ -276,6 +276,6 @@ framework as well, calling LineWork when necessary. But as it stands, LineWork o
 But I have already come so far so I decided to go with how it is. Still, I am glad I was able to finish it just 30mins before the deadline,
 and I had quite a lotta fun as it required a lot of thinking*)
 
-mdt2html "MarkdownTest";
-mdt2html "README"; 
+mdt2html "otherTrials";
+(* mdt2html "README";  *)
 

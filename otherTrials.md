@@ -1,18 +1,16 @@
 ## header
 
-1. the first element always has a p
-2. the secind doesnt
-3. neither does the third
-4. or the fourth for that matter
+1. list item
+2. list
+ **hello *world
 
-5. but on adding a gap
-6. we get something similar
-7. idk how this be working tho
- - indented haha
-8. but pretty cool
+ _para 2_ **
 
-9. it sure is
+3. third item
+ - unordered
+ - item 2
+ - item 3
+  1. yoo
+  1. yo
+  1. ojd
 
-10. hella cool
-
-109\. not a list item
